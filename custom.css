@@ -1,0 +1,676 @@
+/* HELL RUST — стили поверх стандартного шаблона GameStores.
+   Вставляется в «Внешний вид → Продвинутая конфигурация → CSS».
+   Идея: обсидиан и трещина. Камень, острые сколы, один цвет лавы
+   только там, где он что-то значит (цена, выбранное, кнопка).
+   Картинки задаёт custom.js через переменные --hr-*. */
+
+@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Onest:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* переменные шаблона */
+  --default-font-family: "Onest";
+  --accent-color-800: #d4230e;
+  --accent-color-900: #a91a09;
+  --font-color-700: #ebe5df;
+  --font-color-800: #a39a94;
+  --font-color-900: #8a817c;
+  --bg-color-700: #1c1716;
+  --bg-color-800: #151110;
+  --bg-color-900: #0d0a09;
+  --monitoring-joining-color: #ff4526;
+  --monitoring-queue-color: #a91a09;
+  --product-items-trans-bg-color: rgba(13, 10, 9, .7);
+  --promocode-bg-color: #151110;
+
+  /* свои */
+  --obs: #0d0a09;
+  --slab: #151110;
+  --slab-2: #1c1716;
+  --line: rgba(235, 229, 223, .08);
+  --line-2: rgba(235, 229, 223, .14);
+  --stone: #ebe5df;
+  --stone-dim: #a39a94;
+  --stone-mute: #8a817c;   /* 5.2:1 на обсидиане, 4.9:1 на карточке */
+  --ember: #ff4526;        /* текст и линии на тёмном */
+  --ember-fill: #d4230e;   /* заливка под белым текстом */
+  --display: "Dela Gothic One", "Onest", sans-serif;
+  --ui: "Onest", system-ui, sans-serif;
+  --chip: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  --ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+/* ---------- основа ---------- */
+/* не трогать overflow у html: шаблон держит overflow-x на body, иначе ломается sticky */
+html { background: var(--obs); }
+body {
+  font-family: var(--ui);
+  color: var(--stone);
+  background:
+    radial-gradient(70% 520px at 50% 0, rgba(212, 35, 14, .16), rgba(212, 35, 14, 0) 70%),
+    var(--obs);
+  -webkit-font-smoothing: antialiased;
+}
+/* зерно камня: фиксированный слой, не перерисовывается при скролле */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 40; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.gs-loader { background: var(--obs); }
+.gs-loader__spinner { border-color: var(--ember) var(--ember) var(--slab-2); }
+
+.container { width: 100%; max-width: 1240px; padding: 0 24px; box-sizing: border-box; margin: 0 auto; }
+
+/* шаблон ставит баннер выше шапки: шапку первой */
+#root { display: flex; flex-direction: column; }
+#root > * { flex: none; }
+
+/* ---------- шапка ---------- */
+/* шапка лежит поверх баннера прозрачной и твердеет после прокрутки (класс ставит custom.js) */
+.headerContainer {
+  order: -1; position: fixed; top: 0; left: 0; right: 0; z-index: 50; max-width: none; padding: 0;
+  background: linear-gradient(180deg, rgba(13, 10, 9, .7), rgba(13, 10, 9, 0));
+  border-bottom: 1px solid transparent; transition: background .35s, border-color .35s;
+}
+.hr-scrolled .headerContainer { background: rgba(13, 10, 9, .97); border-bottom-color: var(--line); }
+.Header-module__wrapper {
+  max-width: 1240px; margin: 0 auto; padding: 0 24px; box-sizing: border-box;
+  height: 68px; background: transparent; gap: 32px;
+}
+.Header-module__logoWrapper { margin: 0; }
+.Header-module__logo {
+  display: flex; align-items: center; gap: 12px;
+  font: 400 19px/1 var(--display); letter-spacing: .01em; color: var(--stone);
+}
+.Header-module__logo::before {
+  content: ""; width: 38px; height: 38px; flex: none;
+  background: var(--hr-logo, none) center / cover;
+  clip-path: var(--chip);
+}
+.HeaderNav-module__link, .PlayerMenu-module__loginLink { text-transform: none; letter-spacing: 0; }
+.HeaderNav-module__link {
+  position: relative; padding: 24px 0;
+  font: 600 14px/1 var(--ui); color: var(--stone-dim); transition: color .2s;
+}
+.HeaderNav-module__link[class*="active"] { color: var(--stone); }
+@media (hover: hover) { .HeaderNav-module__link:hover { color: var(--stone); } }
+.PlayerMenu-module__loginLink {
+  font: 600 14px/1 var(--ui); color: var(--stone);
+  padding: 11px 16px; border: 1px solid var(--line-2); transition: border-color .2s;
+}
+@media (hover: hover) { .PlayerMenu-module__loginLink:hover { border-color: var(--stone-dim); } }
+.LangSwitcher-module__currentLang { font: 600 13px/1 var(--ui); color: var(--stone-mute); }
+
+.hr-connect {
+  display: inline-flex; align-items: center; gap: 9px; margin-right: 16px;
+  padding: 12px 20px; border: 0; cursor: pointer; clip-path: var(--chip);
+  font: 700 14px/1 var(--ui); color: #fff; background: var(--ember-fill);
+  transition: background .2s, transform .15s var(--ease);
+}
+@media (hover: hover) { .hr-connect:hover { background: #e52a12; } }
+.hr-connect:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
+.hr-connect:active { transform: scale(.97); }
+
+/* иконки Tabler через маску, цвет берут от текста */
+.hr-i { display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
+.hr-i--vk { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/brand-vk.svg"); }
+.hr-i--tg { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/brand-telegram.svg"); }
+.hr-i--arrow { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/arrow-right.svg"); }
+.hr-i--copy { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/copy.svg"); }
+
+/* ---------- первый экран: баннер + плита с адресом и бонусами ---------- */
+.bannerContainer { position: relative; max-width: none; padding: 0; margin: 0; overflow: hidden; }
+.Banner-module__img {
+  display: block; width: 100%; height: clamp(440px, 50vw, 760px); object-fit: cover; object-position: center 32%;
+  border-radius: 0; animation: hr-settle 1.8s var(--ease) both;
+}
+/* затемнение: сверху под шапку, снизу в обсидиан */
+.bannerContainer::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(13, 10, 9, .55) 0, rgba(13, 10, 9, 0) 22%),
+    linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .85) 14%, rgba(13, 10, 9, 0) 46%);
+}
+.hr-embers { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; }
+@keyframes hr-settle { from { transform: scale(1.07); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* плита наезжает на низ баннера, сверху по ней идёт раскалённая трещина */
+.hr-plate {
+  position: relative; z-index: 3; box-sizing: border-box;
+  width: calc(100% - 48px); max-width: 1192px; margin: -96px auto 0;
+  display: grid; grid-template-columns: auto 1fr; align-items: stretch;
+  background: rgba(21, 17, 16, .94); border: 1px solid var(--line);
+  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
+  animation: hr-up 1s .35s var(--ease) both;
+}
+.hr-plate::before {
+  content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 100%;
+  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(255, 69, 38, 0) 100%);
+  transform-origin: left; animation: hr-crack 1.4s .8s var(--ease) both;
+}
+@keyframes hr-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes hr-crack { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.hr-plate__addr {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  padding: 22px 28px; border-right: 1px solid var(--line);
+}
+.hr-label { font: 500 12px/1 var(--ui); color: var(--stone-mute); }
+.hr-plate__ip {
+  display: inline-flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 700 20px/1 var(--ui); color: var(--stone); font-variant-numeric: tabular-nums;
+}
+.hr-plate__ip .hr-i { width: 18px; height: 18px; color: var(--stone-mute); transition: color .2s; }
+@media (hover: hover) { .hr-plate__ip:hover .hr-i { color: var(--ember); } }
+.hr-plate__ip:focus-visible { outline-offset: 4px; }
+.hr-plate__bonus { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 22px 28px; }
+.hr-steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.hr-step { display: flex; align-items: baseline; gap: 10px; padding-right: 20px; }
+.hr-step + .hr-step { padding-left: 20px; border-left: 1px solid var(--line); }
+.hr-step b { font: 400 32px/1 var(--display); color: var(--ember); }
+.hr-step span { font: 500 13px/1.2 var(--ui); color: var(--stone-dim); white-space: nowrap; }
+
+/* ---------- магазин ----------
+   Слева колонка навигации: заголовок, оглавление категорий с числом предметов,
+   под ним сервер и сообщество. Справа поиск и витрина, разбитая на группы по категориям.
+   Обёртки магазина раскрыты (display: contents), их дети встают прямо в сетку main. */
+.Index-module__wrapper {
+  position: relative; isolation: isolate;
+  display: grid; grid-template-columns: 216px minmax(0, 1fr);
+  grid-template-rows: auto auto auto 1fr auto;
+  column-gap: 56px; margin-top: 88px; padding-bottom: 96px; align-items: start;
+}
+/* арт баннера тянется под магазин: тёмный, без цвета, растворяется вниз */
+.Index-module__wrapper::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: -40px; left: 50%; width: 100vw; height: 760px; transform: translateX(-50%);
+  background: var(--hr-bg, none) 0 100% / 180% auto no-repeat;
+  filter: grayscale(.5) brightness(.35) contrast(1.2);
+  opacity: .45;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 30%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 30%, transparent 100%);
+}
+.Shop-module__wrapper, .Shop-module__wrapper > .boxBody { display: contents; }
+
+/* сбрасываем коробки шаблона только на главной; окна и кабинет оформлены отдельно */
+.Index-module__wrapper .boxHeader { margin: 0; padding: 0; background: none; border: 0; border-radius: 0; }
+.Index-module__wrapper .boxBody, .Index-module__wrapper .boxFooter { padding: 0; background: none; border: 0; border-radius: 0; }
+
+/* заголовок */
+.Index-module__wrapper .Shop-module__header {
+  grid-column: 1; grid-row: 1; align-self: end; width: auto; margin: 0 0 36px;
+  font: 400 40px/1 var(--display); letter-spacing: -.01em; color: var(--stone);
+}
+
+/* поиск: во всю ширину витрины, главный инструмент на 316 предметах */
+.Shop-module__wrapper .Search-module__wrapper { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 36px; }
+.Search-module__wrapper {
+  height: 52px; display: flex; align-items: center; overflow: visible;
+  background: var(--slab); border: 1px solid var(--line-2); border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  transition: border-color .2s, background .2s;
+}
+.Search-module__wrapper:focus-within { border-color: var(--stone-dim); background: var(--slab-2); }
+.Search-module__iconWrapper { height: 100%; padding: 0 6px 0 18px; background: none; color: var(--stone-mute); }
+.Search-module__icon { width: 20px; height: 20px; }
+.Search-module__icon path { stroke: currentColor; }
+.Search-module__wrapper:focus-within .Search-module__iconWrapper { color: var(--ember); }
+.Search-module__input {
+  height: 100%; padding: 0 16px 0 10px; background: none; border: 0; outline: 0;
+  font: 500 16px/1 var(--ui); color: var(--stone);
+}
+.Search-module__input::placeholder { color: var(--stone-mute); opacity: 1; }
+.Search-module__input:focus-visible { outline: 0; }
+
+/* категории: оглавление. Имя, линия-выноска, число. Выбранное: линия раскаляется */
+.Categories-module__categories {
+  grid-column: 1; grid-row: 2; align-self: start;
+  display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start;
+  width: auto; margin: 0; padding: 0; border: 0;
+}
+.Categories-module__category {
+  position: relative; display: flex; align-items: baseline; gap: 12px; width: 100%; margin: 0; padding: 8px 0;
+  background: none; border: 0; border-radius: 0; text-align: left; white-space: nowrap;
+  font: 600 15px/1.2 var(--ui); color: var(--stone-dim); transition: color .2s;
+}
+.Categories-module__category::before {
+  content: ""; order: 1; flex: 1 1 auto; min-width: 16px; height: 1px; align-self: center; margin-top: 3px;
+  background: linear-gradient(var(--ember), var(--ember)) 0 0 / 0 100% no-repeat, var(--line);
+  transition: background-size .45s var(--ease);
+}
+.Categories-module__category::after {
+  content: attr(data-hr-n); order: 2; min-width: 2ch; text-align: right;
+  font: 600 13px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); transition: color .2s;
+}
+.Categories-module__category.Categories-module__enableFocus:focus { background: none; color: var(--stone); }
+.Categories-module__category.Categories-module__active { background: none; color: var(--stone); }
+.Categories-module__category.Categories-module__active::before { background-size: 100% 100%; }
+.Categories-module__category.Categories-module__active::after { color: var(--ember); }
+/* пустая категория: приглушена, но читается (4.5:1 и выше) */
+.Categories-module__category[data-hr-n="0"] { color: var(--stone-mute); }
+.Categories-module__category.Categories-module__active[data-hr-n="0"] { color: var(--stone); }
+
+/* левая колонка липнет целиком, если влезает в экран; на низком экране липнет только оглавление,
+   а сервер и сообщество уходят под него (классы ставит custom.js) */
+.hr-stick .Categories-module__categories { position: sticky; top: 92px; }
+.hr-stick .Index-module__wrapper > .Widgets-module__wrapper { position: sticky; top: var(--hr-aside-top, 92px); }
+.hr-stick-toc .Categories-module__categories { position: sticky; top: 92px; z-index: 2; container-type: scroll-state; }
+/* фон под оглавлением только когда оно прилипло, иначе на арте был бы виден прямоугольник */
+@container scroll-state(stuck: top) {
+  .Categories-module__category { background: var(--obs); }
+  .Categories-module__category:first-child { box-shadow: 0 -24px 0 var(--obs); }
+  .Categories-module__category:last-child { box-shadow: 0 16px 0 var(--obs); }
+}
+
+/* ---------- сервер и сообщество ---------- */
+.Index-module__wrapper > .Widgets-module__wrapper {
+  grid-column: 1; grid-row: 3; align-self: start;
+  width: auto; min-width: 0; max-width: none; margin: 40px 0 0; padding-top: 28px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 28px;
+}
+.Widgets-module__widgetWrapper, .Widgets-module__widgetWrapper + .Widgets-module__widgetWrapper { margin: 0; }
+.Widgets-module__wrapper .boxHeader { margin: 0 0 12px; font: 400 14px/1.2 var(--display); color: var(--stone); }
+.MonitoringWidget-module__body { padding: 0; background: none; border: 0; }
+.Widgets-module__wrapper .errorMessage { display: block; width: auto; margin: 0; text-align: left; font: 500 14px/1.4 var(--ui); color: var(--stone-mute); }
+
+/* строка сервера (появится, когда в «Управлении» добавят сервер) */
+.MonitoringServer-module__name { margin-bottom: 8px; font: 600 14px/1.3 var(--ui); color: var(--stone); }
+.MonitoringServer-module__progressBarWrapper { height: 6px; margin-bottom: 8px; border-radius: 0; background: var(--slab-2); }
+.MonitoringServer-module__progressBar { border-radius: 0; }
+.MonitoringServer-module__progressBarAnim { display: none; }
+.MonitoringServer-module__progressInfo { border-radius: 0; background: var(--slab-2); box-shadow: none; font: 500 13px/1.4 var(--ui); }
+.MonitoringServer-module__progressInfo::before { border-top-color: var(--slab-2); }
+.MonitoringServer-module__playersInfo { font: 600 13px/1.4 var(--ui); font-variant-numeric: tabular-nums; }
+.MonitoringServer-module__icon { stroke: var(--stone-mute); }
+.MonitoringWidget-module__updateBtn { margin-top: 12px; border-radius: 0; }
+
+/* сообщество (добавляет custom.js) */
+.hr-social-wrap { order: 9; }
+.hr-social { display: flex; flex-direction: column; }
+.hr-social__link {
+  position: relative; display: grid; grid-template-columns: 36px 1fr 16px; align-items: center; gap: 12px;
+  padding: 10px 0; text-decoration: none; color: var(--stone);
+}
+.hr-social__link + .hr-social__link { border-top: 1px solid var(--line); }
+.hr-social__ico {
+  display: grid; place-items: center; width: 36px; height: 36px; background: var(--slab-2); color: var(--stone-dim);
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  transition: background .25s, color .25s;
+}
+.hr-social__ico .hr-i { width: 20px; height: 20px; }
+.hr-social__name { display: block; font: 600 14px/1.2 var(--ui); }
+.hr-social__hint { display: block; margin-top: 3px; font: 400 13px/1.3 var(--ui); color: var(--stone-mute); }
+.hr-social__link > .hr-i:last-child { width: 16px; height: 16px; color: var(--stone-mute); transition: transform .25s var(--ease), color .2s; }
+
+/* ---------- витрина ---------- */
+.Shop-module__wrapper .Products-module__wrapper {
+  grid-column: 2; grid-row: 2 / 5; margin: 0; width: auto;
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px;
+  background: none; border: 0;
+}
+/* 12 колонок: обычная плитка 2 (6 в ряд), привилегия 3 (4 в ряд), набор и кейс 4 (3 в ряд) */
+.Products-module__wrapper > .Product-module__wrapper { grid-column: span 2; }
+.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 3; }
+.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 4; }
+
+/* пустая выдача: шаблон кладёт «Данных нет» рядом с сеткой, ставим его в зону витрины.
+   Текст подменяет custom.js: первая строка заголовок, вторая что делать */
+.Shop-module__wrapper .errorMessage {
+  grid-column: 2; grid-row: 2; align-self: start; display: block; width: auto; max-width: 46ch; margin: 4px 0 0;
+  text-align: left; white-space: pre-line; font: 500 15px/1.5 var(--ui); color: var(--stone-dim);
+}
+.Shop-module__wrapper .errorMessage::first-line { font: 400 24px/1.6 var(--display); color: var(--stone); }
+
+/* заголовок группы (вставляет custom.js перед первым предметом категории) */
+.hr-group {
+  grid-column: 1 / -1; display: flex; align-items: baseline; gap: 16px;
+  padding: 56px 0 16px;
+}
+.hr-group--top { padding-top: 4px; }
+.hr-group__name { margin: 0; font: 400 24px/1.1 var(--display); letter-spacing: -.01em; color: var(--stone); white-space: nowrap; }
+.hr-group__rule { flex: 1 1 auto; height: 1px; align-self: center; margin-top: 4px; background: var(--line); }
+.hr-group__meta { font: 500 13px/1.2 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); white-space: nowrap; }
+
+/* карточка: иконка, имя, цена. По углам служебное: скидка слева, количество справа, как в слоте инвентаря Rust.
+   Иконки приводит к одному размеру custom.js (--hr-s, --hr-x, --hr-y), тёмные высветляет (--hr-b) */
+.Product-module__wrapper {
+  position: relative; width: auto; height: auto; aspect-ratio: auto; padding: 12px 12px 14px; overflow: hidden; cursor: pointer;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "img" "name" "price";
+  align-content: start;
+  background: var(--slab); border-radius: 0; animation: none;
+  transition: background .25s;
+}
+.Product-module__wrapper:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+.Product-module__img, .productModalImg {
+  transform: translate(var(--hr-x, 0), var(--hr-y, 0)) scale(var(--hr-s, 1));
+  filter: brightness(var(--hr-b, 1)) drop-shadow(0 6px 6px rgba(0, 0, 0, .55));
+}
+.Product-module__img {
+  grid-area: img; justify-self: center; display: block; position: relative;
+  width: 84px; max-width: 100%; height: auto; aspect-ratio: 1; margin: 8px 0 14px; object-fit: contain;
+  transition: transform .45s var(--ease);
+}
+.Product-module__name,
+.Product-module__wrapper:hover .Product-module__name,
+.Product-module__wrapper:active .Product-module__name {
+  grid-area: name; position: static; width: auto; max-width: none; min-height: 2.6em; padding: 0; z-index: auto;
+  background: none; transform: none; opacity: 1; visibility: visible;
+  font: 600 13px/1.3 var(--ui); color: var(--stone); text-align: left;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;
+}
+.Product-module__price {
+  grid-area: price; position: static; justify-self: start; display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
+  min-width: 0; margin: 6px 0 0 -7px; padding: 5px 7px; background: transparent; border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+  font: 400 15px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); white-space: nowrap;
+  transition: background .25s, color .25s;
+}
+.Product-module__price span { font: inherit; color: inherit; }
+.Product-module__oldPrice { margin: 0; font: 600 12px/1 var(--ui); color: var(--stone-mute); text-decoration: line-through; }
+.Product-module__oldPrice::after { display: none; }
+.Product-module__count,
+.Product-module__wrapper:hover .Product-module__count,
+.Product-module__wrapper:active .Product-module__count {
+  position: absolute; top: 10px; right: 12px; bottom: auto; left: auto; margin: 0; padding: 0; opacity: 1;
+  background: none; border: 0; font: 600 12px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute);
+}
+.Product-module__discount {
+  position: absolute; top: 10px; left: 12px; right: auto; padding: 0;
+  background: none; border-radius: 0; font: 400 13px/1 var(--display); color: var(--ember); white-space: nowrap;
+}
+.Product-module__favorite { top: 4px; left: 6px; right: auto; padding: 6px; color: var(--stone-mute); }
+.Product-module__favorite[data-favorite=true] { color: var(--ember); }
+.Product-module__favoriteWithDiscount { top: 26px; }
+
+/* трещина: общий приём для наведения и выбранного */
+.hr-social__link::after, .Product-module__wrapper::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--ember); transform: scaleX(0); transform-origin: left;
+  transition: transform .45s var(--ease); pointer-events: none;
+}
+.hr-social__link::after { bottom: -1px; }
+
+/* подвал магазина: юридический текст платформы, тихо под витриной */
+.Shop-module__wrapper > .boxFooter {
+  grid-column: 2; grid-row: 5; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 48px; align-items: start;
+}
+.ShopFooter-module__text { margin: 0; max-width: 62ch; text-align: left; font: 400 12px/1.5 var(--ui); color: var(--stone-mute); }
+.ShopFooter-module__links { flex-direction: column; align-items: flex-start; row-gap: 8px; text-transform: none; }
+.ShopFooter-module__link { padding: 0; text-align: left; font: 500 13px/1.3 var(--ui); color: var(--stone-dim); }
+
+/* ---------- витрина: привилегии, наборы, кейсы ----------
+   Те же плиты, только крупнее и со сколом угла, как плита с адресом. Новых эффектов нет:
+   затемнение снизу у портрета то же, что у баннера, под ним читается текст. */
+.Product-module__wrapper[data-hr-feat] {
+  border: 1px solid var(--line-2);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+.Product-module__wrapper[data-hr-feat] .Product-module__name {
+  min-height: 0; font: 400 20px/1.15 var(--display); letter-spacing: -.01em; -webkit-line-clamp: 2;
+}
+.Product-module__wrapper[data-hr-feat] .Product-module__price { margin-top: 10px; font-size: 20px; padding: 6px 8px; margin-left: -8px; }
+.Product-module__wrapper[data-hr-feat] .Product-module__oldPrice { font-size: 14px; }
+/* скидка на витрине: залитая метка со сколом */
+.Product-module__wrapper[data-hr-feat] .Product-module__discount {
+  top: 14px; left: 14px; padding: 6px 8px 5px; background: var(--ember-fill); color: #fff; font-size: 14px;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px)); z-index: 3;
+}
+.Product-module__wrapper[data-hr-feat] .Product-module__count { top: 16px; right: 18px; font-size: 13px; z-index: 3; }
+
+/* привилегия: портрет на всю карточку, имя и цена внизу */
+.Product-module__wrapper[data-hr-feat="portrait"] {
+  aspect-ratio: 3 / 4; padding: 20px; align-content: end; background: var(--obs);
+}
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__img {
+  grid-area: auto; /* иначе контейнером станет пустая область img высотой 0 */
+  position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; max-width: none; margin: 0;
+  object-fit: cover; object-position: 50% 20%; transform: none; filter: none;
+  transition: transform .6s var(--ease);
+}
+.Product-module__wrapper[data-hr-feat="portrait"]::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .86) 26%, rgba(13, 10, 9, 0) 58%);
+}
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name,
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__price { position: relative; z-index: 2; }
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 26px; line-height: 1.05; }
+.Product-module__wrapper[data-hr-feat="portrait"]::after { z-index: 3; }
+
+/* набор и кейс: предмет крупно на прозрачном фоне */
+.Product-module__wrapper[data-hr-feat="item"] { padding: 20px 20px 18px; }
+.Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 152px; margin: 10px 0 20px; }
+
+/* ---------- окно покупки ----------
+   Та же плита, что под баннером: обсидиан, скол угла, трещина по верхней кромке.
+   Лава одна: кнопка «Получить». */
+.ModalLayout-module__wrapper { background: rgba(8, 6, 5, .84); }
+.ModalLayout-module__overflowWrapper::-webkit-scrollbar-track { background: var(--obs); }
+.ModalLayout-module__overflowWrapper::-webkit-scrollbar-thumb { background: var(--slab-2); }
+.ModalLayout-module__positionWrapper { align-items: center; padding: 24px; }
+.ModalLayout-module__modal {
+  position: relative; margin: 0; text-align: left; border-radius: 0; box-shadow: none;
+  background: var(--slab); border: 1px solid var(--line-2);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+}
+.ModalLayout-module__modal::before {
+  content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 100%; z-index: 1;
+  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(255, 69, 38, 0) 100%);
+}
+.ProductModal-module__item, .ProductModal-module__bp, .ProductModal-module__command, .ProductModal-module__dropdown { width: 440px; }
+.ModalLayout-module__modal > .boxHeader {
+  display: block; margin: 0; padding: 26px 28px 0; background: none; border-radius: 0;
+  font: 400 24px/1.15 var(--display); letter-spacing: -.01em; color: var(--stone);
+}
+.ModalLayout-module__modal > .boxBody { padding: 8px 28px 24px; background: none; border-radius: 0; }
+.ModalLayout-module__modal > .boxFooter {
+  display: flex; gap: 12px; padding: 0 28px 28px; background: none; border-radius: 0;
+}
+.productModalImg { display: block; width: 100%; max-width: none; height: 220px; margin: 8px 0 20px; object-fit: contain; }
+.productModalDescription { background: var(--obs); color: var(--stone-dim); font: 400 14px/1.5 var(--ui); }
+.productModalFormRow { gap: 16px; margin-bottom: 18px; }
+.TotalSum-module__label, .CountSelector-module__label, .ItemContent-module__label {
+  margin-bottom: 8px; font: 600 13px/1.2 var(--ui); color: var(--stone-dim);
+}
+.TotalSum-module__inputWrapper, .CountSelector-module__inputWrapper {
+  height: 48px; border-radius: 0; background: var(--obs); border: 1px solid var(--line-2); overflow: hidden;
+}
+.TotalSum-module__currency {
+  order: 2; display: flex; align-items: center; padding: 0 16px 0 0; line-height: 1; background: none;
+  font: 400 18px/1 var(--display); color: var(--stone-mute);
+}
+.TotalSum-module__input, .CountSelector-module__input {
+  min-width: 0; padding: 0 14px; background: none; border: 0; opacity: 1;
+  font: 400 18px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); -webkit-text-fill-color: var(--stone);
+}
+.CountSelector-module__input { text-align: center; padding: 0 4px; }
+.CountSelector-module__changeCountBtn { flex: none; width: 46px; background: none; color: var(--stone-dim); transition: background .2s, color .2s; }
+.CountSelector-module__changeCountBtn.CountSelector-module__left { border-right: 1px solid var(--line-2); }
+.CountSelector-module__changeCountBtn.CountSelector-module__right { border-left: 1px solid var(--line-2); }
+.CountSelector-module__changeCountBtn:focus { background: none; }
+.CountSelector-module__changeCountBtn:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+.CountSelector-module__icon { width: 18px; height: 18px; }
+/* окно привилегии: портрет кадром во всю ширину окна */
+.hr-modal-portrait .productModalImg {
+  width: calc(100% + 56px); max-width: none; height: 280px; margin: 8px -28px 22px;
+  object-fit: cover; object-position: 50% 20%; transform: none; filter: none;
+}
+/* подсказка платформы: спокойная заметка, без красного */
+.productModalGiveText {
+  display: block; padding: 2px 0 2px 12px; border-left: 2px solid var(--line-2); text-align: left;
+  font: 500 14px/1.45 var(--ui); color: var(--stone-dim);
+}
+.productModalProductAvailability { text-align: left; color: var(--stone-dim); }
+.ModalLayout-module__modal .Button-module__btn {
+  height: 50px; padding: 0 22px; border: 1px solid transparent; border-radius: 0;
+  font: 700 15px/1 var(--ui); transition: background .2s, color .2s, border-color .2s;
+}
+.ModalLayout-module__modal .Button-module__btn.Button-module__gray { background: none; border-color: var(--line-2); color: var(--stone-dim); }
+.ModalLayout-module__modal .Button-module__btn.Button-module__gray:focus { background: none; }
+.ModalLayout-module__modal .Button-module__btn.Button-module__accent {
+  flex: 1; background: var(--ember-fill); border-color: var(--ember-fill); color: #fff; clip-path: var(--chip);
+}
+.ModalLayout-module__modal .Button-module__btn.Button-module__accent:focus { background: var(--ember-fill); border-color: var(--ember-fill); }
+.ModalLayout-module__modal .Button-module__btn:focus-visible { outline: 2px solid var(--stone); outline-offset: 2px; }
+.ModalLayout-module__modal .Button-module__btn.Button-module__accent:focus-visible { outline: 2px solid #fff; outline-offset: -5px; }
+
+/* ---------- наведение: только там, где есть мышь (на телефоне красная цена не залипает) ---------- */
+@media (hover: hover) {
+  .Search-module__wrapper:hover { border-color: rgba(235, 229, 223, .22); }
+  .Search-module__wrapper:focus-within:hover { border-color: var(--stone-dim); }
+  .Categories-module__category:hover { color: var(--stone); }
+  .Categories-module__category:hover::before { background-size: 100% 100%; }
+  .MonitoringServer-module__icon:hover { stroke: var(--ember); }
+  .hr-social__link:hover .hr-social__ico { background: var(--ember-fill); color: #fff; }
+  .hr-social__link:hover > .hr-i:last-child { color: var(--ember); transform: translateX(3px); }
+  .Product-module__wrapper:hover { background: var(--slab-2); }
+  .Product-module__wrapper:hover .Product-module__img { transform: translate(var(--hr-x, 0), var(--hr-y, 0)) translateY(-4px) scale(calc(var(--hr-s, 1) * 1.04)); }
+  /* цена раскаляется в кнопку, снизу проходит трещина */
+  .Product-module__wrapper:hover .Product-module__price { background: var(--ember-fill); color: #fff; }
+  .Product-module__wrapper:hover .Product-module__oldPrice { color: #fff; }
+  .Product-module__favorite:hover { color: var(--ember); }
+  .hr-social__link:hover::after, .Product-module__wrapper:hover::after { transform: scaleX(1); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover { background: var(--obs); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .Product-module__img { transform: scale(1.03); }
+  .ShopFooter-module__link:hover { color: var(--stone); }
+  .CountSelector-module__changeCountBtn:hover { background: var(--slab-2); color: var(--stone); }
+  .ModalLayout-module__modal .Button-module__btn.Button-module__gray:hover { border-color: var(--stone-mute); color: var(--stone); background: none; }
+  .ModalLayout-module__modal .Button-module__btn.Button-module__accent:hover { background: #e52a12; border-color: #e52a12; }
+}
+
+/* ---------- подвал и мелочи ---------- */
+.DesktopCopyright-module__wrapper { background: var(--slab); color: var(--stone-mute); border: 1px solid var(--line); }
+.DesktopCopyright-module__link { color: var(--stone-dim); }
+.hr-toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 9999; max-width: calc(100% - 32px);
+  padding: 14px 18px; background: var(--slab-2); border-left: 2px solid var(--ember);
+  font: 500 14px/1.4 var(--ui); color: var(--stone);
+  transform: translate(-50%, 12px); opacity: 0; visibility: hidden; transition: opacity .3s, transform .4s var(--ease), visibility 0s .4s;
+}
+.hr-toast.is-on { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .3s, transform .4s var(--ease); }
+:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+}
+
+/* ---------- плита с бонусами: раньше в столбик, потом 2×2 ---------- */
+@media (max-width: 1100px) {
+  .hr-plate { grid-template-columns: 1fr; }
+  .hr-plate__addr { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 820px) {
+  .hr-steps { grid-auto-flow: row; grid-template-columns: 1fr 1fr; gap: 14px 0; }
+  .hr-steps .hr-step:nth-child(odd) { padding-left: 0; border-left: 0; }
+}
+
+/* ---------- узкий десктоп: обычных 4 в ряд ---------- */
+@media (max-width: 1199px) {
+  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 3; }
+  .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 22px; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 112px; }
+}
+
+/* ---------- планшет ---------- */
+@media (max-width: 960px) {
+  .Index-module__wrapper { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; margin-top: 48px; }
+  .Index-module__wrapper .Shop-module__header { grid-column: 1; grid-row: 1; margin-bottom: 20px; font-size: 32px; }
+  .Shop-module__wrapper .Search-module__wrapper { grid-column: 1; grid-row: 2; margin-bottom: 0; }
+  /* категории: лента, прилипает под шапкой */
+  .Categories-module__categories, .hr-stick .Categories-module__categories, .hr-stick-toc .Categories-module__categories {
+    grid-column: 1; grid-row: 3; position: sticky; top: 60px; z-index: 5;
+    flex-direction: row; gap: 0 22px; overflow-x: auto; scrollbar-width: none;
+    margin: 0 -24px; padding: 4px 24px 0; background: rgba(13, 10, 9, .96); border-bottom: 1px solid var(--line);
+  }
+  .Categories-module__categories::-webkit-scrollbar { display: none; }
+  .Categories-module__category { flex: none; width: auto; gap: 6px; padding: 14px 0 13px; }
+  .Categories-module__category::before {
+    order: 3; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; min-width: 0; margin: 0;
+    background: var(--ember); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease);
+  }
+  .Categories-module__category.Categories-module__active::before { transform: scaleX(1); }
+  .Categories-module__category::after { min-width: 0; font-size: 12px; }
+  .Shop-module__wrapper .Products-module__wrapper { grid-column: 1; grid-row: 4; margin-top: 8px; }
+  .Shop-module__wrapper .errorMessage { grid-column: 1; grid-row: 4; margin-top: 32px; }
+  .Shop-module__wrapper > .boxFooter { grid-column: 1; grid-row: 6; margin-top: 48px; grid-template-columns: 1fr; }
+  .Index-module__wrapper > .Widgets-module__wrapper, .hr-stick .Index-module__wrapper > .Widgets-module__wrapper {
+    grid-column: 1; grid-row: 5; position: static; margin-top: 56px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px;
+  }
+}
+@media (max-width: 960px) and (hover: hover) {
+  .Categories-module__category:hover::before { background-size: auto; transform: scaleX(0); }
+  .Categories-module__category.Categories-module__active:hover::before { transform: scaleX(1); }
+}
+
+/* ---------- телефон ---------- */
+@media (max-width: 600px) {
+  .container, .Header-module__wrapper { padding: 0 16px; }
+  .Header-module__wrapper { height: 60px; gap: 12px; }
+  /* на телефоне название уже есть в самом лого, текст прячем */
+  .Header-module__logo { font-size: 0; gap: 0; }
+  .Header-module__logo::before { width: 40px; height: 40px; }
+  .Header-module__wrapper { justify-content: space-between; }
+  .hr-connect { padding: 10px 14px; margin-right: 8px; }
+  .Banner-module__img { height: 300px; object-position: 72% center; }
+  .hr-plate { width: calc(100% - 32px); margin-top: -72px; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+  .hr-plate__addr, .hr-plate__bonus { padding: 18px 16px; }
+  .hr-plate__ip { font-size: 18px; }
+  .hr-step { flex-direction: column; align-items: flex-start; gap: 6px; padding-right: 10px; min-width: 0; }
+  .hr-step + .hr-step { padding-left: 14px; }
+  .hr-steps .hr-step:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .hr-step b { font-size: 24px; }
+  .hr-step span { font-size: 12px; }
+
+  .Index-module__wrapper { margin-top: 40px; padding-bottom: 72px; }
+  .Index-module__wrapper .Shop-module__header { font-size: 28px; margin-bottom: 16px; }
+  .Search-module__wrapper { height: 48px; }
+  .Categories-module__categories, .hr-stick .Categories-module__categories, .hr-stick-toc .Categories-module__categories { margin: 0 -16px; padding: 4px 16px 0; gap: 0 20px; }
+  .Shop-module__wrapper .Products-module__wrapper { margin: 8px -16px 0; }
+  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 4; }
+  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 6; }
+  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 12; }
+  .Shop-module__wrapper .errorMessage { font-size: 14px; }
+  .Shop-module__wrapper .errorMessage::first-line { font-size: 20px; }
+  /* заголовок группы: число и цены своей строкой */
+  .hr-group { flex-wrap: wrap; row-gap: 6px; padding: 36px 16px 12px; }
+  .hr-group--top { padding-top: 16px; }
+  .hr-group__name { font-size: 20px; }
+  .hr-group__rule { display: none; }
+  .hr-group__meta { flex-basis: 100%; font-size: 12px; white-space: normal; }
+  .Product-module__wrapper { padding: 10px 10px 12px; }
+  .Product-module__img { width: 72px; margin: 10px 0 12px; }
+  .Product-module__name, .Product-module__wrapper:hover .Product-module__name { font-size: 12px; }
+  .Product-module__price { margin-top: 6px; font-size: 13px; }
+  .Product-module__count, .Product-module__wrapper:hover .Product-module__count { top: 8px; right: 8px; font-size: 11px; }
+  .Product-module__discount { top: 8px; left: 10px; font-size: 12px; }
+  .Index-module__wrapper > .Widgets-module__wrapper, .hr-stick .Index-module__wrapper > .Widgets-module__wrapper { grid-template-columns: 1fr; gap: 28px; }
+
+  /* витрина на телефоне: привилегии по две, наборы и кейсы строкой, картинка слева */
+  .Product-module__wrapper[data-hr-feat="portrait"] { padding: 14px; }
+  .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 20px; }
+  .Product-module__wrapper[data-hr-feat] .Product-module__price { font-size: 16px; margin-top: 6px; }
+  .Product-module__wrapper[data-hr-feat] .Product-module__discount { top: 10px; left: 10px; font-size: 12px; padding: 5px 6px 4px; }
+  .Product-module__wrapper[data-hr-feat="item"] {
+    grid-template-columns: 84px minmax(0, 1fr); grid-template-areas: "img name" "img price";
+    align-content: center; column-gap: 16px; padding: 14px 16px;
+  }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 84px; margin: 0; align-self: center; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__name { align-self: end; font-size: 18px; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__price { align-self: start; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__discount { top: 50%; bottom: auto; left: auto; right: 16px; transform: translateY(-50%); }
+  .hr-modal-portrait .productModalImg { width: calc(100% + 32px); height: 220px; margin: 4px -16px 16px; }
+
+  /* окно покупки снизу во всю ширину */
+  .ModalLayout-module__positionWrapper { align-items: flex-end; padding: 0; }
+  .ModalLayout-module__modal, .ProductModal-module__item, .ProductModal-module__bp, .ProductModal-module__command, .ProductModal-module__dropdown { width: 100%; }
+  .ModalLayout-module__modal { border-left: 0; border-right: 0; border-bottom: 0; }
+  .ModalLayout-module__modal > .boxHeader { padding: 22px 16px 0; font-size: 22px; }
+  .ModalLayout-module__modal > .boxBody { padding: 4px 16px 20px; }
+  .ModalLayout-module__modal > .boxFooter { padding: 0 16px max(20px, env(safe-area-inset-bottom)); }
+  .productModalImg { height: 160px; margin: 4px 0 16px; }
+  .productModalFormRow { grid-template-columns: 1fr 1fr; gap: 12px; }
+}
+
+/* самые узкие телефоны: адрес сервера целиком вместе со значком */
+@media (max-width: 359px) {
+  .hr-plate__ip { font-size: 16px; gap: 8px; }
+}
