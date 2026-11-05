@@ -825,6 +825,13 @@ body {
 
 /* ---------- планшет ---------- */
 @media (max-width: 960px) {
+  /* баннер: кадр 16:9 целиком, сразу под шапкой. Лицо демона и надпись занимают почти всю ширину арта,
+     поэтому любой более узкий кадр что-то режет. Плита только чуть заходит на землю внизу кадра */
+  .container.bannerContainer { --hr-head: 69px; padding: var(--hr-head) 0 0; background: var(--obs); }
+  .Banner-module__img { height: auto; aspect-ratio: 16 / 9; object-position: center; }
+  .bannerContainer::after { top: var(--hr-head); background: linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .6) 8%, rgba(13, 10, 9, 0) 22%); }
+  .hr-embers { top: var(--hr-head); height: auto; bottom: 0; }
+  .hr-plate { margin-top: -24px; }
   .Index-module__wrapper { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; margin-top: 48px; }
   .Index-module__wrapper .Shop-module__header { grid-column: 1; grid-row: 1; margin-bottom: 20px; font-size: 32px; }
   .hr-tools { grid-column: 1; grid-row: 3; margin: 12px 0 16px; flex-wrap: wrap; }
@@ -876,8 +883,8 @@ body {
   .Header-module__logo::before { width: 40px; height: 40px; }
   .Header-module__wrapper { justify-content: space-between; }
   .hr-connect { padding: 10px 14px; margin-right: 8px; }
-  .Banner-module__img { height: 300px; object-position: 72% center; }
-  .hr-plate { width: calc(100% - 32px); margin-top: -72px; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+  .container.bannerContainer { --hr-head: 61px; }
+  .hr-plate { width: calc(100% - 32px); margin-top: -16px; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
   .hr-plate__addr, .hr-plate__bonus { padding: 18px 16px; }
   .hr-plate__ip { font-size: 18px; }
   .hr-step { flex-direction: column; align-items: flex-start; gap: 6px; padding-right: 10px; min-width: 0; }

@@ -67,14 +67,14 @@
   (function preloadBanner() {
     var l = document.createElement('link');
     l.rel = 'preload'; l.as = 'image';
-    l.href = window.matchMedia('(max-width: 600px)').matches ? HR.bannerMobile : HR.banner;
+    l.href = window.matchMedia('(max-width: 960px)').matches ? HR.bannerMobile : HR.banner;
     document.head.appendChild(l);
   })();
 
   function hero() {
     var img = document.querySelector('.Banner-module__img');
     if (!img) return;
-    var want = window.matchMedia('(max-width: 600px)').matches ? HR.bannerMobile : HR.banner;
+    var want = window.matchMedia('(max-width: 960px)').matches ? HR.bannerMobile : HR.banner;
     if (img.getAttribute('src') !== want) img.setAttribute('src', want);
     img.alt = 'Hell Rust';
     // показываем баннер только когда загрузился именно наш арт (иначе мелькает баннер GameStores)
