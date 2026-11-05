@@ -37,6 +37,11 @@
   --ui: "Onest", system-ui, sans-serif;
   --chip: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
   --ease: cubic-bezier(.16, 1, .3, 1);
+  /* шкала длительностей движения */
+  --t-press: .16s;  /* отдача на нажатии */
+  --t-out: .2s;     /* уход наведения */
+  --t-in: .3s;      /* приход наведения */
+  --t-slow: .6s;    /* крупные карточки: портрет, жар */
 }
 
 /* ---------- основа ---------- */
@@ -227,9 +232,9 @@ body::after {
   width: auto; margin: 0; padding: 0; border: 0;
 }
 .Categories-module__category {
-  position: relative; display: flex; align-items: baseline; gap: 12px; width: 100%; margin: 0; padding: 8px 0;
+  position: relative; display: flex; align-items: baseline; gap: 12px; width: 100%; margin: 0; padding: 5px 0;
   background: none; border: 0; border-radius: 0; text-align: left; white-space: nowrap;
-  font: 600 15px/1.2 var(--ui); color: var(--stone-dim); transition: color .2s;
+  font: 600 14px/1.2 var(--ui); color: var(--stone-dim); transition: color .2s;
 }
 .Categories-module__category::before {
   content: ""; order: 1; flex: 1 1 auto; min-width: 16px; height: 1px; align-self: center; margin-top: 3px;
@@ -248,23 +253,19 @@ body::after {
 .Categories-module__category[data-hr-n="0"] { color: var(--stone-mute); }
 .Categories-module__category.Categories-module__active[data-hr-n="0"] { color: var(--stone); }
 
-/* левая колонка липнет целиком, если влезает в экран; на низком экране липнет только оглавление,
-   а сервер и сообщество уходят под него (классы ставит custom.js) */
-.hr-stick .Categories-module__categories { position: sticky; top: 92px; }
+/* левая колонка липнет одним куском: оглавление и блок сервера с общим смещением (считает custom.js).
+   Не влезает в экран — смещение отрицательное, колонка липнет низом */
+.hr-stick .Categories-module__categories { position: sticky; top: var(--hr-cats-top, 92px); }
 .hr-stick .Index-module__wrapper > .Widgets-module__wrapper { position: sticky; top: var(--hr-aside-top, 92px); }
-.hr-stick-toc .Categories-module__categories { position: sticky; top: 92px; z-index: 2; container-type: scroll-state; }
-/* фон под оглавлением только когда оно прилипло, иначе на арте был бы виден прямоугольник */
-@container scroll-state(stuck: top) {
-  .Categories-module__category { background: var(--obs); }
-  .Categories-module__category:first-child { box-shadow: 0 -24px 0 var(--obs); }
-  .Categories-module__category:last-child { box-shadow: 0 16px 0 var(--obs); }
-}
+/* у шаблона на наведении, фокусе и нажатии категория заливается красным: глушим */
+.Categories-module__category:is(:hover, :focus, :active),
+.Categories-module__category.Categories-module__active:is(:hover, :focus, :active) { background: none; }
 
 /* ---------- сервер и сообщество ---------- */
 .Index-module__wrapper > .Widgets-module__wrapper {
   grid-column: 1; grid-row: 3; align-self: start;
-  width: auto; min-width: 0; max-width: none; margin: 40px 0 0; padding-top: 28px; border-top: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 28px;
+  width: auto; min-width: 0; max-width: none; margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 20px;
 }
 .Widgets-module__widgetWrapper, .Widgets-module__widgetWrapper + .Widgets-module__widgetWrapper { margin: 0; }
 .Widgets-module__wrapper .boxHeader { margin: 0 0 12px; font: 400 14px/1.2 var(--display); color: var(--stone); }
@@ -279,15 +280,26 @@ body::after {
 .MonitoringServer-module__progressInfo { border-radius: 0; background: var(--slab-2); box-shadow: none; font: 500 13px/1.4 var(--ui); }
 .MonitoringServer-module__progressInfo::before { border-top-color: var(--slab-2); }
 .MonitoringServer-module__playersInfo { font: 600 13px/1.4 var(--ui); font-variant-numeric: tabular-nums; }
+/* онлайн сервера: главная цифра колонки, крупно камнем; «/ 500» тише */
+.MonitoringServer-module__info { margin-top: 2px; }
+.MonitoringServer-module__info > span { font: 400 20px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); }
+.MonitoringServer-module__olineDivider { margin: 0 6px; transform: none; color: var(--stone-mute); }
+.MonitoringServer-module__btn { display: grid; place-items: center; width: 32px; height: 32px; }
 .MonitoringServer-module__icon { stroke: var(--stone-mute); }
-.MonitoringWidget-module__updateBtn { margin-top: 12px; border-radius: 0; }
+/* «Обновить» у шаблона — красная плашка во всю ширину; делаем тихой контурной кнопкой */
+.Widgets-module__wrapper .MonitoringWidget-module__updateBtn.Button-module__btn {
+  margin-top: 10px; padding: 7px 12px; width: auto; border-radius: 0;
+  background: none; border: 1px solid var(--line-2); color: var(--stone-dim);
+  font: 600 13px/1 var(--ui); box-shadow: none; transition: border-color .2s, color .2s;
+}
+.Widgets-module__wrapper .MonitoringWidget-module__updateBtn.Button-module__btn:is(:hover, :focus-visible) { background: none; border-color: var(--ember); color: var(--stone); }
 
 /* сообщество (добавляет custom.js) */
 .hr-social-wrap { order: 9; }
 .hr-social { display: flex; flex-direction: column; }
 .hr-social__link {
   position: relative; display: grid; grid-template-columns: 36px 1fr 16px; align-items: center; gap: 12px;
-  padding: 10px 0; text-decoration: none; color: var(--stone);
+  padding: 8px 0; text-decoration: none; color: var(--stone);
 }
 .hr-social__link + .hr-social__link { border-top: 1px solid var(--line); }
 .hr-social__ico {
@@ -326,71 +338,111 @@ body::after {
 }
 .hr-group--top { padding-top: 4px; }
 .hr-group__name { margin: 0; font: 400 24px/1.1 var(--display); letter-spacing: -.01em; color: var(--stone); white-space: nowrap; }
-.hr-group__rule { flex: 1 1 auto; height: 1px; align-self: center; margin-top: 4px; background: var(--line); }
+/* линия заголовка начинается трещиной лавы, как верх плиты с адресом */
+.hr-group__rule {
+  flex: 1 1 auto; height: 1px; align-self: center; margin-top: 4px;
+  background: linear-gradient(90deg, var(--ember) 0, rgba(255, 69, 38, 0) 96px) no-repeat, var(--line);
+}
 .hr-group__meta { font: 500 13px/1.2 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); white-space: nowrap; }
 
-/* карточка: иконка, имя, цена. По углам служебное: скидка слева, количество справа, как в слоте инвентаря Rust.
-   Иконки приводит к одному размеру custom.js (--hr-s, --hr-x, --hr-y), тёмные высветляет (--hr-b) */
+/* карточка предмета: плита из того же камня, что привилегии. Сверху тёплый отсвет лавы (тот же,
+   что на портретах), внизу холодный камень. Первым читается предмет, вторым цена, третьим имя.
+   По углам служебное: скидка слева, количество справа, как в слоте инвентаря Rust.
+   Иконки выравнивает custom.js (--hr-s, --hr-x, --hr-y); тёмные он заранее высветляет на canvas (--hr-lit).
+   Фильтров на плитках нет: на 320 иконках они грузили видеокарту при прокрутке.
+
+   Хуки для motion: --hr-hover (0..1, зарегистрирован через @property, его можно анимировать)
+   управляет всем состоянием наведения: подъём иконки, отсвет ::before, цена-кнопка, трещина ::after.
+   Наведение идёт по очереди из одной переменной: --hr-hover растёт линейно, у каждой части своё окно
+   (иконка 0–.5, отсвет .1–.7, цена .25–.75, трещина .4–1) и своё смягчение 1-(1-a)², уход в обратном порядке. */
+@property --hr-hover { syntax: '<number>'; inherits: true; initial-value: 0; }
 .Product-module__wrapper {
-  position: relative; width: auto; height: auto; aspect-ratio: auto; padding: 12px 12px 14px; overflow: hidden; cursor: pointer;
-  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "img" "name" "price";
+  --hr-hover: 0;
+  --hr-a1: clamp(0, var(--hr-hover) / .5, 1);
+  --hr-a2: clamp(0, (var(--hr-hover) - .1) / .6, 1);
+  --hr-a3: clamp(0, (var(--hr-hover) - .25) / .5, 1);
+  --hr-a4: clamp(0, (var(--hr-hover) - .4) / .6, 1);
+  --hr-lift: calc(var(--hr-a1) * (2 - var(--hr-a1)));
+  --hr-glow: calc(var(--hr-a2) * (2 - var(--hr-a2)));
+  --hr-price: calc(var(--hr-a3) * (2 - var(--hr-a3)));
+  --hr-crack: calc(var(--hr-a4) * (2 - var(--hr-a4)));
+  position: relative; width: auto; height: auto; aspect-ratio: auto; padding: 12px 14px 14px; overflow: hidden; cursor: pointer;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "img" "price" "name";
   align-content: start;
-  background: var(--slab); border-radius: 0; animation: none;
-  transition: background .25s;
+  background: linear-gradient(180deg, #2a1714 0, #1d1412 38%, #161110 72%, #141010 100%);
+  border-radius: 0; animation: none;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  transition: --hr-hover var(--t-out) linear, transform var(--t-press) var(--ease);
 }
-.Product-module__wrapper:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+/* приход наведения медленнее ухода: на приходе виден порядок, уход не мешает вести мышь дальше */
+.Product-module__wrapper:is(:hover, :focus-visible) { transition-duration: var(--t-in), var(--t-press); }
+/* отдача на нажатии: плитка чуть проседает и сразу возвращается */
+.Product-module__wrapper:active { transform: scale(.97); }
+.Product-module__wrapper[data-hr-feat]:active { transform: scale(.985); }
+.Product-module__wrapper:focus-visible { --hr-hover: 1; outline: 2px solid var(--ember); outline-offset: -2px; }
+/* отсвет наведения: лава снизу, по трещине. Один псевдоэлемент, без фильтров */
+.Product-module__wrapper::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(0deg, rgba(212, 35, 14, .22) 0, rgba(212, 35, 14, .06) 40%, rgba(212, 35, 14, 0) 70%);
+  opacity: var(--hr-glow);
+}
+.Product-module__wrapper > * { position: relative; z-index: 1; }
 .Product-module__img, .productModalImg {
+  content: var(--hr-lit, normal);
   transform: translate(var(--hr-x, 0), var(--hr-y, 0)) scale(var(--hr-s, 1));
-  filter: brightness(var(--hr-b, 1)) drop-shadow(0 6px 6px rgba(0, 0, 0, .55));
 }
 .Product-module__img {
-  grid-area: img; justify-self: center; display: block; position: relative;
-  width: 84px; max-width: 100%; height: auto; aspect-ratio: 1; margin: 8px 0 14px; object-fit: contain;
-  transition: transform .45s var(--ease);
+  grid-area: img; justify-self: center; display: block;
+  width: 100px; max-width: 76%; height: auto; aspect-ratio: 1; margin: 10px 0 12px; object-fit: contain;
+  translate: 0 calc(var(--hr-lift) * -5px);
 }
 .Product-module__name,
 .Product-module__wrapper:hover .Product-module__name,
 .Product-module__wrapper:active .Product-module__name {
-  grid-area: name; position: static; width: auto; max-width: none; min-height: 2.6em; padding: 0; z-index: auto;
+  grid-area: name; position: relative; width: auto; max-width: none; min-height: 2.6em; margin-top: 6px; padding: 0; z-index: 1;
   background: none; transform: none; opacity: 1; visibility: visible;
-  font: 600 13px/1.3 var(--ui); color: var(--stone); text-align: left;
+  font: 500 13px/1.3 var(--ui); color: var(--stone-dim); text-align: left;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;
 }
+/* цена: в покое камень, на наведении раскаляется в кнопку */
 .Product-module__price {
-  grid-area: price; position: static; justify-self: start; display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
-  min-width: 0; margin: 6px 0 0 -7px; padding: 5px 7px; background: transparent; border-radius: 0;
+  grid-area: price; position: relative; justify-self: start; display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
+  min-width: 0; margin: 0 0 0 -7px; padding: 5px 7px; border-radius: 0;
+  background: rgb(212 35 14 / var(--hr-price));
   clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
-  font: 400 15px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); white-space: nowrap;
-  transition: background .25s, color .25s;
+  font: 400 17px/1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: color-mix(in srgb, #fff calc(var(--hr-price) * 100%), var(--stone));
 }
 .Product-module__price span { font: inherit; color: inherit; }
-.Product-module__oldPrice { margin: 0; font: 600 12px/1 var(--ui); color: var(--stone-mute); text-decoration: line-through; }
+.Product-module__oldPrice { margin: 0; font: 600 12px/1 var(--ui); color: color-mix(in srgb, #fff calc(var(--hr-price) * 100%), var(--stone-mute)); text-decoration: line-through; }
 .Product-module__oldPrice::after { display: none; }
 .Product-module__count,
 .Product-module__wrapper:hover .Product-module__count,
 .Product-module__wrapper:active .Product-module__count {
-  position: absolute; top: 10px; right: 12px; bottom: auto; left: auto; margin: 0; padding: 0; opacity: 1;
-  background: none; border: 0; font: 600 12px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute);
+  position: absolute; top: 10px; right: 14px; bottom: auto; left: auto; margin: 0; padding: 0; opacity: 1; z-index: 1;
+  background: none; border: 0; font: 600 12px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-dim);
 }
 .Product-module__discount {
-  position: absolute; top: 10px; left: 12px; right: auto; padding: 0;
+  position: absolute; top: 10px; left: 14px; right: auto; padding: 0; z-index: 1;
   background: none; border-radius: 0; font: 400 13px/1 var(--display); color: var(--ember); white-space: nowrap;
 }
-.Product-module__favorite { top: 4px; left: 6px; right: auto; padding: 6px; color: var(--stone-mute); }
+.Product-module__favorite { position: absolute; top: 4px; left: 6px; right: auto; padding: 6px; color: var(--stone-mute); }
 .Product-module__favorite[data-favorite=true] { color: var(--ember); }
 .Product-module__favoriteWithDiscount { top: 26px; }
 
 /* трещина: общий приём для наведения и выбранного */
 .hr-social__link::after, .Product-module__wrapper::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; z-index: 2;
   background: var(--ember); transform: scaleX(0); transform-origin: left;
   transition: transform .45s var(--ease); pointer-events: none;
 }
+.Product-module__wrapper::after { transform: scaleX(var(--hr-crack)); transition: none; }
 .hr-social__link::after { bottom: -1px; }
 
 /* подвал магазина: юридический текст платформы, тихо под витриной */
 .Shop-module__wrapper > .boxFooter {
   grid-column: 2; grid-row: 5; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+  border-image: linear-gradient(90deg, var(--ember) 0, rgba(255, 69, 38, 0) 96px, var(--line) 96px) 1;
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 48px; align-items: start;
 }
 .ShopFooter-module__text { margin: 0; max-width: 62ch; text-align: left; font: 400 12px/1.5 var(--ui); color: var(--stone-mute); }
@@ -404,8 +456,9 @@ body::after {
   border: 1px solid var(--line-2);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
 }
+.Product-module__wrapper[data-hr-feat] { grid-template-areas: "img" "name" "price"; }
 .Product-module__wrapper[data-hr-feat] .Product-module__name {
-  min-height: 0; font: 400 20px/1.15 var(--display); letter-spacing: -.01em; -webkit-line-clamp: 2;
+  min-height: 0; margin-top: 0; color: var(--stone); font: 400 20px/1.15 var(--display); letter-spacing: -.01em; -webkit-line-clamp: 2;
 }
 .Product-module__wrapper[data-hr-feat] .Product-module__price { margin-top: 10px; font-size: 20px; padding: 6px 8px; margin-left: -8px; }
 .Product-module__wrapper[data-hr-feat] .Product-module__oldPrice { font-size: 14px; }
@@ -423,17 +476,72 @@ body::after {
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__img {
   grid-area: auto; /* иначе контейнером станет пустая область img высотой 0 */
   position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; max-width: none; margin: 0;
-  object-fit: cover; object-position: 50% 20%; transform: none; filter: none;
-  transition: transform .6s var(--ease);
+  object-fit: cover; object-position: 50% 20%; transform: none; translate: none;
+  transition: transform var(--t-slow) var(--ease);
 }
 .Product-module__wrapper[data-hr-feat="portrait"]::before {
-  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 1;
   background: linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .86) 26%, rgba(13, 10, 9, 0) 58%);
 }
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name,
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__price { position: relative; z-index: 2; }
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 26px; line-height: 1.05; }
 .Product-module__wrapper[data-hr-feat="portrait"]::after { z-index: 3; }
+
+/* привилегия: живой жар. Тлеющие искры поднимаются из-под имени и гаснут, не доходя до лица.
+   Слой вставляет custom.js (.hr-heat) поверх затемнения и под текстом. Двигаются только transform
+   у двух слоёв точек (дальний мелкий и медленный, ближний крупнее), всё считает компоновщик.
+   Пока карточка не на экране или вкладка скрыта, анимация на паузе (атрибут data-on ставит custom.js).
+   На наведении ближние искры разгораются и снизу проступает жар. */
+.Product-module__wrapper > .hr-heat {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  transform: scaleX(calc(1 - 2 * mod(var(--hr-seed, 0), 2)));
+}
+.hr-heat::before {
+  content: ""; position: absolute; inset: 0; opacity: 0;
+  background: radial-gradient(90% 38% at 50% 100%, rgba(255, 69, 38, .34), rgba(212, 35, 14, .1) 55%, rgba(212, 35, 14, 0) 100%);
+  transition: opacity var(--t-slow) var(--ease);
+}
+.hr-heat > i {
+  position: absolute; inset: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(0deg, transparent 0, #000 30%, #000 48%, transparent 80%);
+  mask-image: linear-gradient(0deg, transparent 0, #000 30%, #000 48%, transparent 80%);
+  animation: hr-sway 7s ease-in-out infinite alternate both paused;
+  animation-delay: calc(var(--hr-seed, 0) * -2.3s);
+}
+.hr-heat > i::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 200%;
+  background-size: 100% 50%; background-repeat: repeat;
+  animation: hr-rise 18s linear infinite paused;
+  animation-delay: calc(var(--hr-seed, 0) * -4.1s);
+}
+/* дальние искры: мелкие, тусклые */
+.hr-heat > i:first-child::before {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255, 176, 120, .8) 0 .7px, rgba(255, 69, 38, .25) 1.4px, rgba(255, 69, 38, 0) 3px),
+    radial-gradient(circle at 31% 64%, rgba(255, 176, 120, .7) 0 .6px, rgba(255, 69, 38, .2) 1.3px, rgba(255, 69, 38, 0) 3px),
+    radial-gradient(circle at 47% 9%, rgba(255, 176, 120, .6) 0 .6px, rgba(255, 69, 38, .2) 1.2px, rgba(255, 69, 38, 0) 2.6px),
+    radial-gradient(circle at 58% 41%, rgba(255, 176, 120, .8) 0 .8px, rgba(255, 69, 38, .25) 1.5px, rgba(255, 69, 38, 0) 3.2px),
+    radial-gradient(circle at 71% 83%, rgba(255, 176, 120, .7) 0 .7px, rgba(255, 69, 38, .2) 1.4px, rgba(255, 69, 38, 0) 3px),
+    radial-gradient(circle at 86% 27%, rgba(255, 176, 120, .75) 0 .7px, rgba(255, 69, 38, .22) 1.4px, rgba(255, 69, 38, 0) 3px),
+    radial-gradient(circle at 22% 92%, rgba(255, 176, 120, .6) 0 .6px, rgba(255, 69, 38, .2) 1.2px, rgba(255, 69, 38, 0) 2.6px),
+    radial-gradient(circle at 93% 58%, rgba(255, 176, 120, .7) 0 .7px, rgba(255, 69, 38, .2) 1.4px, rgba(255, 69, 38, 0) 3px),
+    radial-gradient(circle at 5% 47%, rgba(255, 176, 120, .6) 0 .6px, rgba(255, 69, 38, .2) 1.2px, rgba(255, 69, 38, 0) 2.6px);
+}
+/* ближние искры: крупнее, быстрее, качаются с другим периодом */
+.hr-heat > i:last-child { opacity: .7; animation-duration: 5.2s; transition: opacity var(--t-slow) var(--ease); }
+.hr-heat > i:last-child::before {
+  animation-duration: 11s;
+  background-image:
+    radial-gradient(circle at 18% 55%, rgba(255, 196, 140, .95) 0 1.3px, rgba(255, 90, 40, .35) 2.4px, rgba(255, 69, 38, 0) 6px),
+    radial-gradient(circle at 64% 12%, rgba(255, 196, 140, .85) 0 1.1px, rgba(255, 90, 40, .3) 2.2px, rgba(255, 69, 38, 0) 5px),
+    radial-gradient(circle at 83% 72%, rgba(255, 196, 140, .95) 0 1.4px, rgba(255, 90, 40, .35) 2.6px, rgba(255, 69, 38, 0) 6.5px),
+    radial-gradient(circle at 38% 88%, rgba(255, 196, 140, .8) 0 1px, rgba(255, 90, 40, .3) 2px, rgba(255, 69, 38, 0) 5px),
+    radial-gradient(circle at 9% 30%, rgba(255, 196, 140, .85) 0 1.1px, rgba(255, 90, 40, .3) 2.2px, rgba(255, 69, 38, 0) 5px);
+}
+.hr-heat[data-on] > i, .hr-heat[data-on] > i::before { animation-play-state: running; }
+@keyframes hr-rise { to { transform: translateY(-50%); } }
+@keyframes hr-sway { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
 
 /* набор и кейс: предмет крупно на прозрачном фоне */
 .Product-module__wrapper[data-hr-feat="item"] { padding: 20px 20px 18px; }
@@ -491,7 +599,7 @@ body::after {
 /* окно привилегии: портрет кадром во всю ширину окна */
 .hr-modal-portrait .productModalImg {
   width: calc(100% + 56px); max-width: none; height: 280px; margin: 8px -28px 22px;
-  object-fit: cover; object-position: 50% 20%; transform: none; filter: none;
+  object-fit: cover; object-position: 50% 20%; transform: none; content: normal;
 }
 /* подсказка платформы: спокойная заметка, без красного */
 .productModalGiveText {
@@ -521,15 +629,13 @@ body::after {
   .MonitoringServer-module__icon:hover { stroke: var(--ember); }
   .hr-social__link:hover .hr-social__ico { background: var(--ember-fill); color: #fff; }
   .hr-social__link:hover > .hr-i:last-child { color: var(--ember); transform: translateX(3px); }
-  .Product-module__wrapper:hover { background: var(--slab-2); }
-  .Product-module__wrapper:hover .Product-module__img { transform: translate(var(--hr-x, 0), var(--hr-y, 0)) translateY(-4px) scale(calc(var(--hr-s, 1) * 1.04)); }
-  /* цена раскаляется в кнопку, снизу проходит трещина */
-  .Product-module__wrapper:hover .Product-module__price { background: var(--ember-fill); color: #fff; }
-  .Product-module__wrapper:hover .Product-module__oldPrice { color: #fff; }
+  .Product-module__wrapper:hover { --hr-hover: 1; }
   .Product-module__favorite:hover { color: var(--ember); }
-  .hr-social__link:hover::after, .Product-module__wrapper:hover::after { transform: scaleX(1); }
+  .hr-social__link:hover::after { transform: scaleX(1); }
   .Product-module__wrapper[data-hr-feat="portrait"]:hover { background: var(--obs); }
-  .Product-module__wrapper[data-hr-feat="portrait"]:hover .Product-module__img { transform: scale(1.03); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .Product-module__img { transform: scale(1.04); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .hr-heat::before,
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .hr-heat > i:last-child { opacity: 1; }
   .ShopFooter-module__link:hover { color: var(--stone); }
   .CountSelector-module__changeCountBtn:hover { background: var(--slab-2); color: var(--stone); }
   .ModalLayout-module__modal .Button-module__btn.Button-module__gray:hover { border-color: var(--stone-mute); color: var(--stone); background: none; }
@@ -550,6 +656,10 @@ body::after {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+  /* без движения: искр нет, иконка не подпрыгивает, плитка не проседает; цена и трещина остаются состоянием */
+  .hr-heat { display: none; }
+  .Product-module__img { translate: none; }
+  .Product-module__wrapper:active, .Product-module__wrapper[data-hr-feat]:active { transform: none; }
 }
 
 /* ---------- плита с бонусами: раньше в столбик, потом 2×2 ---------- */
@@ -637,9 +747,10 @@ body::after {
   .hr-group__rule { display: none; }
   .hr-group__meta { flex-basis: 100%; font-size: 12px; white-space: normal; }
   .Product-module__wrapper { padding: 10px 10px 12px; }
-  .Product-module__img { width: 72px; margin: 10px 0 12px; }
+  .Product-module__img { width: 76px; max-width: 80%; margin: 12px 0 10px; }
   .Product-module__name, .Product-module__wrapper:hover .Product-module__name { font-size: 12px; }
-  .Product-module__price { margin-top: 6px; font-size: 13px; }
+  .Product-module__price { margin-top: 0; font-size: 15px; }
+  .Product-module__name, .Product-module__wrapper:hover .Product-module__name { margin-top: 4px; }
   .Product-module__count, .Product-module__wrapper:hover .Product-module__count { top: 8px; right: 8px; font-size: 11px; }
   .Product-module__discount { top: 8px; left: 10px; font-size: 12px; }
   .Index-module__wrapper > .Widgets-module__wrapper, .hr-stick .Index-module__wrapper > .Widgets-module__wrapper { grid-template-columns: 1fr; gap: 28px; }

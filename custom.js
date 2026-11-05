@@ -333,11 +333,68 @@
     return [+s.toFixed(3), +(-cx * s * 100).toFixed(1), +(-cy * s * 100).toFixed(1), +b.toFixed(2)];
   }
   function setFit(img, f) {
+    var src = img.getAttribute('src');
     img.style.setProperty('--hr-s', f[0]);
     img.style.setProperty('--hr-x', f[1] + '%');
     img.style.setProperty('--hr-y', f[2] + '%');
-    img.style.setProperty('--hr-b', f[3]);
-    img.setAttribute('data-hr-fit', img.getAttribute('src'));
+    img.setAttribute('data-hr-fit', src);
+    if (f[3] > 1.02) lit(src, f[3]);
+  }
+
+  // Тяжёлое (замер иконки, высветление) делаем только в свободное время кадра, по кусочку,
+  // чтобы прокрутка не подтормаживала, пока догружаются иконки
+  var Q = [], qOn = false;
+  var ric = window.requestIdleCallback || function (cb) { return setTimeout(function () { cb({ timeRemaining: function () { return 8; } }); }, 60); };
+  function idle(fn) { Q.push(fn); if (!qOn) { qOn = true; ric(drain); } }
+  function drain(dl) {
+    while (Q.length && dl.timeRemaining() > 4) { try { Q.shift()(); } catch (e) {} }
+    if (Q.length) ric(drain); else qOn = false;
+  }
+  // высветление ещё и ждёт паузы в прокрутке: это украшение, его можно сделать на 200 мс позже
+  var LQ = [], lastScroll = 0, lOn = false;
+  window.addEventListener('scroll', function () { lastScroll = Date.now(); }, { passive: true });
+  function idleLit(fn) { LQ.push(fn); if (!lOn) { lOn = true; ric(drainLit); } }
+  function drainLit(dl) {
+    if (Date.now() - lastScroll < 200) { setTimeout(function () { ric(drainLit); }, 200); return; }
+    while (LQ.length && dl.timeRemaining() > 6) { try { LQ.shift()(); } catch (e) {} }
+    if (LQ.length) ric(drainLit); else lOn = false;
+  }
+
+  // Тёмные иконки высветляем один раз на canvas и подставляем готовую картинку через CSS content.
+  // Раньше это делал filter: brightness() на каждой из 320 иконок, и прокрутка грузила видеокарту.
+  // src у React-картинки не трогаем: React о подмене не знает.
+  var LIT = {};
+  function setLit(src) {
+    var u = LIT[src];
+    if (!u || u === 1) return;
+    document.querySelectorAll('img[src="' + src.replace(/["\\]/g, '\\$&') + '"]').forEach(function (n) {
+      if (n.getAttribute('data-hr-lit') !== src && (n.classList.contains('Product-module__img') || n.classList.contains('productModalImg')) && !isPortrait(n)) {
+        n.style.setProperty('--hr-lit', 'url("' + u + '")');
+        n.setAttribute('data-hr-lit', src);
+      }
+    });
+  }
+  function makeLit(src, im, k) {
+    var N = 192, c = document.createElement('canvas');
+    c.width = c.height = N;
+    var x = c.getContext('2d');
+    if ('filter' in x) { x.filter = 'brightness(' + k + ')'; x.drawImage(im, 0, 0, N, N); }
+    else {
+      x.drawImage(im, 0, 0, N, N);
+      var d = x.getImageData(0, 0, N, N), p = d.data;
+      for (var i = 0; i < p.length; i += 4) { p[i] = Math.min(255, p[i] * k); p[i + 1] = Math.min(255, p[i + 1] * k); p[i + 2] = Math.min(255, p[i + 2] * k); }
+      x.putImageData(d, 0, 0);
+    }
+    c.toBlob(function (b) { if (!b) return; LIT[src] = URL.createObjectURL(b); setLit(src); }, 'image/png');
+  }
+  function lit(src, k, im) {
+    if (LIT[src]) return setLit(src);
+    LIT[src] = 1;
+    if (im) return idleLit(function () { makeLit(src, im, k); });
+    var m = new Image();
+    m.crossOrigin = 'anonymous';
+    m.onload = function () { idleLit(function () { makeLit(src, m, k); }); };
+    m.src = src;
   }
   function fitImg(img) {
     var src = img.getAttribute('src');
@@ -348,12 +405,15 @@
     var im = new Image();
     im.crossOrigin = 'anonymous';
     im.onload = function () {
-      var f;
-      try { f = measure(im); } catch (e) { f = [1, 0, 0, 1]; }
-      FIT[src] = f;
-      clearTimeout(fitImg.t);
-      fitImg.t = setTimeout(function () { try { localStorage.setItem(FIT_KEY, JSON.stringify(FIT)); } catch (e) {} }, 400);
-      document.querySelectorAll('.Product-module__img, .productModalImg').forEach(function (n) { if (n.getAttribute('src') === src) setFit(n, f); });
+      idle(function () {
+        var f;
+        try { f = measure(im); } catch (e) { f = [1, 0, 0, 1]; }
+        FIT[src] = f;
+        clearTimeout(fitImg.t);
+        fitImg.t = setTimeout(function () { try { localStorage.setItem(FIT_KEY, JSON.stringify(FIT)); } catch (e) {} }, 400);
+        if (f[3] > 1.02) lit(src, f[3], im);
+        document.querySelectorAll('.Product-module__img, .productModalImg').forEach(function (n) { if (n.getAttribute('src') === src && !isPortrait(n)) setFit(n, f); });
+      });
     };
     im.src = src;
   }
@@ -378,14 +438,52 @@
       if (img.style.objectPosition !== v) img.style.objectPosition = v;
     });
   }
+  // портрету подгонка и высветление не нужны; если успели примениться до загрузки каталога — снимаем
+  function unfit(img) {
+    if (!img.hasAttribute('data-hr-fit') && !img.hasAttribute('data-hr-lit')) return;
+    ['--hr-s', '--hr-x', '--hr-y', '--hr-lit'].forEach(function (p) { img.style.removeProperty(p); });
+    img.removeAttribute('data-hr-fit');
+    img.removeAttribute('data-hr-lit');
+  }
   function icons() {
+    if (!CAT) return; // пока каталог не загружен, не знаем, где портреты, а где иконки
     document.querySelectorAll('.Product-module__img, .productModalImg').forEach(function (img) {
-      if (isPortrait(img)) return;
+      if (isPortrait(img)) return unfit(img);
       var src = img.getAttribute('src');
       if (FIT[src]) { if (img.getAttribute('data-hr-fit') !== src) setFit(img, FIT[src]); return; }
       if (img._hrSeen) { if (img._hrSeen !== src) fitImg(img); return; }
       img._hrSeen = src;
       if (fitIO) fitIO.observe(img); else fitImg(img);
+    });
+  }
+
+  // Привилегии: слой с тлеющими искрами в каждой карточке-портрете. Двигает его CSS (только transform),
+  // здесь только вставка и пауза: анимация идёт, пока карточка на экране и вкладка открыта.
+  var heatIO = null;
+  function heatSync(h) {
+    var on = !!h._hrVis && !document.hidden;
+    if (on !== h.hasAttribute('data-on')) { if (on) h.setAttribute('data-on', ''); else h.removeAttribute('data-on'); }
+  }
+  function heat() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!heatIO && 'IntersectionObserver' in window) {
+      heatIO = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { e.target._hrVis = e.isIntersecting; heatSync(e.target); });
+      });
+      document.addEventListener('visibilitychange', function () { document.querySelectorAll('.hr-heat').forEach(heatSync); });
+    }
+    document.querySelectorAll('.hr-heat').forEach(function (h) {
+      if (!h.parentNode.matches('[data-hr-feat="portrait"]')) { if (heatIO) heatIO.unobserve(h); h.remove(); }
+    });
+    document.querySelectorAll('.Product-module__wrapper[data-hr-feat="portrait"]').forEach(function (c, i) {
+      var h = c.querySelector(':scope > .hr-heat');
+      if (!h) {
+        h = el('<i class="hr-heat" aria-hidden="true"><i></i><i></i></i>');
+        c.appendChild(h);
+        if (heatIO) heatIO.observe(h); else { h._hrVis = true; heatSync(h); }
+      }
+      var s = String(i % 4);
+      if (h.style.getPropertyValue('--hr-seed') !== s) h.style.setProperty('--hr-seed', s);
     });
   }
 
@@ -408,18 +506,20 @@
     if (i && i.getAttribute('aria-label') !== 'Поиск предмета') i.setAttribute('aria-label', 'Поиск предмета');
   }
 
-  // левая колонка липнет целиком, только если помещается в экран
+  // Левая колонка (оглавление + сервер + сообщество) всегда едет одним куском.
+  // Это два разных узла шаблона, поэтому липнут оба, с общим смещением. Влезает в экран — липнет сверху под шапкой;
+  // не влезает — липнет низом к краю экрана, чтобы был виден весь столбец целиком по мере прокрутки.
   function stick() {
     var cats = document.querySelector('.Categories-module__categories');
     var aside = document.querySelector('.Index-module__wrapper > .Widgets-module__wrapper');
     var root = document.documentElement;
-    if (!cats || window.innerWidth <= 960) { root.classList.remove('hr-stick', 'hr-stick-toc'); return; }
-    var top = 92, ch = cats.offsetHeight, ah = aside ? aside.offsetHeight + 40 : 0;
-    var fits = top + ch + ah + 24 <= window.innerHeight;
-    root.classList.toggle('hr-stick', fits);
-    root.classList.toggle('hr-stick-toc', !fits && top + ch + 24 <= window.innerHeight);
-    var v = top + ch + 40 + 'px';
-    if (aside && root.style.getPropertyValue('--hr-aside-top') !== v) root.style.setProperty('--hr-aside-top', v);
+    if (!cats || window.innerWidth <= 960) { root.classList.remove('hr-stick'); return; }
+    var gap = 24, ch = cats.offsetHeight, ah = aside ? aside.offsetHeight + gap : 0;
+    var top = Math.min(92, window.innerHeight - ch - ah - 24);
+    root.classList.add('hr-stick');
+    var ct = top + 'px', at = top + ch + gap + 'px';
+    if (root.style.getPropertyValue('--hr-cats-top') !== ct) root.style.setProperty('--hr-cats-top', ct);
+    if (root.style.getPropertyValue('--hr-aside-top') !== at) root.style.setProperty('--hr-aside-top', at);
   }
 
   // регион для озвучки создаём пустым заранее, иначе экранный диктор первое сообщение пропустит
@@ -449,6 +549,7 @@
     groups();
     crops();
     icons();
+    heat();
     searchHint();
     stick();
   }
