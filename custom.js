@@ -32,7 +32,18 @@
     // map: вайпы карты этого сервера, время по Москве: ['2026-11-12 18:00', ...]. Пусто = показываем только глобальный.
     wipes: { global: true, map: [], note: '' },
 
+    // вкладки «Статистика» и «Баны» в шапке рядом с «Магазином», адреса /#stats и /#bans.
+    // url: адрес JSON, который отдаёт плагин сервера (с заголовком CORS). Пусто = показываем пример данных с пометкой.
+    // stats: [{ name, steamid, kills, deaths, hours, farm }]
+    // bans:  [{ name, steamid, reason, admin, at: '2026-11-03 18:20', until: '2026-12-03 18:20' или '' (навсегда) }], время по Москве
+    pages: {
+      stats: { title: 'Статистика', url: '' },
+      bans: { title: 'Баны', url: '' }
+    },
+
+    // порядок = порядок на сайте. Пустой url = строка видна, но не кликается (ждём ссылку от клиента)
     social: [
+      { name: 'Discord', hint: 'Общение и поддержка', url: '', icon: 'ds' },
       { name: 'ВКонтакте', hint: 'Розыгрыши и новости', url: 'https://vk.com/hellrustserver', icon: 'vk' },
       { name: 'Telegram', hint: 'Вайпы и обновления', url: 'https://t.me/hellrustserver', icon: 'tg' }
     ]
@@ -186,9 +197,12 @@
     var aside = document.querySelector('.Widgets-module__wrapper');
     if (!aside || !HR.social.length || document.querySelector('.hr-social')) return;
     var links = HR.social.map(function (s) {
-      return '<a class="hr-social__link" href="' + s.url + '" target="_blank" rel="noopener"><span class="hr-social__ico">' + icon(s.icon) + '</span>' +
+      var inner = '<span class="hr-social__ico">' + icon(s.icon) + '</span>' +
         '<span><span class="hr-social__name">' + s.name + '</span><span class="hr-social__hint">' + s.hint + '</span></span>' +
-        icon('arrow') + '</a>';
+        icon('arrow');
+      return s.url
+        ? '<a class="hr-social__link" href="' + s.url + '" target="_blank" rel="noopener">' + inner + '</a>'
+        : '<div class="hr-social__link">' + inner + '</div>';
     }).join('');
     aside.appendChild(el('<section class="Widgets-module__widgetWrapper hr-social-wrap"><h2 class="boxHeader">Сообщество</h2><div class="hr-social">' + links + '</div></section>'));
   }
@@ -784,19 +798,19 @@
     if (i && i.getAttribute('aria-label') !== 'Поиск предмета') i.setAttribute('aria-label', 'Поиск предмета');
   }
 
-  // Левая колонка (оглавление + сервер + сообщество) всегда едет одним куском.
-  // Это два разных узла шаблона, поэтому липнут оба, с общим смещением. Влезает в экран — липнет сверху под шапкой;
+  // Левая колонка (промокод, вайп, сервер, сообщество) едет одним куском. Влезает в экран — липнет сверху под шапкой;
   // не влезает — липнет низом к краю экрана, чтобы был виден весь столбец целиком по мере прокрутки.
+  // Полоса категорий липнет под шапкой, но если переносится на 3 строки и больше, то нет: закроет пол-экрана.
   function stick() {
     var cats = document.querySelector('.Categories-module__categories');
     var aside = document.querySelector('.Index-module__wrapper > .Widgets-module__wrapper');
     var root = document.documentElement;
-    if (!cats || window.innerWidth <= 960) { root.classList.remove('hr-stick'); return; }
-    var gap = 24, ch = cats.offsetHeight, ah = aside ? aside.offsetHeight + gap : 0;
-    var top = Math.min(92, window.innerHeight - ch - ah - 24);
+    if (window.innerWidth <= 960) { root.classList.remove('hr-stick'); root.classList.remove('hr-cats-tall'); return; }
+    if (cats) root.classList.toggle('hr-cats-tall', cats.offsetHeight > 110);
+    if (!aside) { root.classList.remove('hr-stick'); return; }
+    var top = Math.min(92, window.innerHeight - aside.offsetHeight - 24);
     root.classList.add('hr-stick');
-    var ct = top + 'px', at = top + ch + gap + 'px';
-    if (root.style.getPropertyValue('--hr-cats-top') !== ct) root.style.setProperty('--hr-cats-top', ct);
+    var at = top + 'px';
     if (root.style.getPropertyValue('--hr-aside-top') !== at) root.style.setProperty('--hr-aside-top', at);
   }
 
@@ -813,6 +827,239 @@
     clearTimeout(t._h);
     t._h = setTimeout(function () { t.classList.remove('is-on'); }, 3200);
   }
+
+  // ---------- вкладки «Статистика» и «Баны» ----------
+  // Шаблон про них не знает, поэтому живут на главной по адресу /#stats и /#bans:
+  // прячем магазин с левой колонкой и рисуем на их месте свой раздел.
+  // шаблон при загрузке переписывает адрес и срезает #stats; запоминаем, с чем открыли, и возвращаем
+  var BOOT = { hash: location.hash, t: Date.now() };
+  var PG = { stats: { q: '', sort: 'kills', shown: 25 }, bans: { q: '', only: 'all', shown: 25 }, data: {}, busy: {} };
+  var STAT_COLS = [['kills', 'Убийства'], ['deaths', 'Смерти'], ['kd', 'K/D'], ['farm', 'Добыто'], ['hours', 'В игре']];
+  var STAT_SORTS = [['kills', 'Убийства'], ['kd', 'K/D'], ['farm', 'Добыча'], ['hours', 'Время']];
+  var MON3 = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+
+  function pageNow() {
+    var m = /^#(stats|bans)$/.exec(location.hash);
+    return m && HR.pages && HR.pages[m[1]] && location.pathname === '/' ? m[1] : '';
+  }
+  function fmtN(n) { return Math.round(n).toLocaleString('ru-RU').replace(/\s/g, ' '); }
+  function parseMsk(s) {
+    var a = String(s || '').match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/);
+    return a ? new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4] - 3, +a[5])) : null;
+  }
+  function shortDate(d) {
+    var x = mskDate(d);
+    return x.day + ' ' + MON3[new Date(d.getTime() + 3 * 3600e3).getUTCMonth()] + ', ' + x.hh + ':' + (x.mm < 10 ? '0' : '') + x.mm;
+  }
+
+  // пример данных, пока плагин сервера не подключён. Числа одни и те же при каждом открытии
+  function demoData(k) {
+    var seed = 7, rnd = function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    var sid = function () { var t = '7656119'; for (var i = 0; i < 10; i++) t += Math.floor(rnd() * 10); return t; };
+    var nicks = ['NightRaider', 'Шрам', 'dimon_krsk', 'ZERG', 'Kasper', 'tor4ok', 'Sanya_Rock', 'Hazard', 'm1ner', 'Volk',
+      'Rekt', 'Lizzy', 'oldman', 'Карась', 'Gorilla', 'RaidBoss', 'Tolyan', 'PvPshnik', 'Kirpich', 'ghostik',
+      'Ferrum', 'nomad', 'Белый', 'Junkyard', 'Медведь', 'Fox', 'Bandit', 'krot', 'Сварщик', 'Viper',
+      'Mamont', 'roof_camper', 'Ezh', 'Barsik', 'Salo', 'HeliHunter', 'Grom', 'Тихий', 'Scrapper', 'Lynx',
+      'Dyadya_Vasya', 'Ash', 'Kaban', 'Wolfram', 'Ржавый', 'Mute', 'Bober', 'Cobalt', 'Pchela', 'Frost',
+      'Zhuk', 'Kerosin', 'Леший', 'Rocket', 'Shadow', 'Petrovich', 'Trapper', 'Noob', 'Kuzya', 'Sever'];
+    if (k === 'stats') {
+      return nicks.map(function (n) {
+        var hours = 4 + Math.floor(Math.pow(rnd(), 1.6) * 260), skill = .3 + rnd() * 2.6;
+        var deaths = 2 + Math.floor(hours * (.5 + rnd() * 1.4)), kills = Math.floor(deaths * skill * (.6 + rnd() * .8));
+        return { name: n, steamid: sid(), kills: kills, deaths: deaths, hours: hours, farm: Math.floor(hours * (600 + rnd() * 2600)) };
+      });
+    }
+    var reasons = ['Читы: аимбот', 'Читы: волхак', 'Макросы на отдачу', 'Обход бана', 'Тим больше лимита', 'Оскорбления администрации',
+      'Реклама другого сервера', 'Багоюз: текстуры', 'Читы: аимбот', 'Тим больше лимита', 'Помеха проверке на читы', 'Макросы на отдачу',
+      'Оскорбления игроков', 'Читы: спидхак', 'Багоюз: стены', 'Обход бана'];
+    var lens = [0, 0, 30, 0, 7, 3, 7, 14, 0, 7, 0, 30, 1, 0, 14, 0], admins = ['Hellkeeper', 'Сатир', 'Hellkeeper', 'Лев'];
+    var now = Date.now();
+    return reasons.map(function (r, i) {
+      var at = new Date(now - (i * 26 + rnd() * 20 + 3) * 3600e3), len = lens[i];
+      var two = function (v) { return (v < 10 ? '0' : '') + v; };
+      var iso = function (d) { var m = new Date(d.getTime() + 3 * 3600e3); return m.getUTCFullYear() + '-' + two(m.getUTCMonth() + 1) + '-' + two(m.getUTCDate()) + ' ' + two(m.getUTCHours()) + ':' + two(m.getUTCMinutes()); };
+      return { name: nicks[(i * 7 + 3) % nicks.length] + (i % 3 ? '' : '_' + (i + 2)), steamid: sid(), reason: r, admin: admins[i % admins.length],
+        at: iso(at), until: len ? iso(new Date(at.getTime() + len * 864e5)) : '' };
+    });
+  }
+
+  function loadPage(k, box) {
+    if (PG.data[k] || PG.busy[k]) return;
+    var P = HR.pages[k];
+    if (!P.url) { PG.data[k] = { rows: demoData(k), demo: true }; return; }
+    PG.busy[k] = true;
+    fetch(P.url).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+      PG.data[k] = { rows: Array.isArray(j) ? j : (j.rows || j.items || []) };
+    }).catch(function () { PG.data[k] = { rows: [], error: true }; }).then(function () {
+      PG.busy[k] = false;
+      var b = document.querySelector('.hr-page[data-page="' + k + '"]');
+      if (b) renderPage(k, b);
+    });
+  }
+
+  function buildPage(k) {
+    var P = HR.pages[k], st = PG[k];
+    var seg = k === 'stats'
+      ? '<fieldset class="hr-seg"><legend class="hr-sr">Сортировка</legend>' + STAT_SORTS.map(function (o) {
+          return '<label><input type="radio" name="hr-psort" value="' + o[0] + '"' + (st.sort === o[0] ? ' checked' : '') + '><span>' + o[1] + '</span></label>';
+        }).join('') + '</fieldset>'
+      : '<fieldset class="hr-seg"><legend class="hr-sr">Какие баны показать</legend>' + [['all', 'Все'], ['active', 'Действуют'], ['over', 'Истекли']].map(function (o) {
+          return '<label><input type="radio" name="hr-ponly" value="' + o[0] + '"' + (st.only === o[0] ? ' checked' : '') + '><span>' + o[1] + '</span></label>';
+        }).join('') + '</fieldset>';
+    var box = el('<section class="hr-page" data-page="' + k + '" aria-labelledby="hr-page-h">' +
+      '<div class="hr-page__head"><h1 class="hr-page__title" id="hr-page-h">' + esc(P.title) + '</h1><p class="hr-page__sub"></p></div>' +
+      '<div class="hr-page__tools">' +
+        '<label class="hr-page__search">' + icon('search') + '<span class="hr-sr">Поиск</span>' +
+          '<input type="search" autocomplete="off" spellcheck="false" placeholder="Ник или SteamID"></label>' + seg +
+      '</div>' +
+      '<div class="hr-page__body"></div>' +
+      '<button type="button" class="hr-page__more" hidden>Показать ещё</button>' +
+      '<p class="hr-page__note" hidden></p>' +
+    '</section>');
+    var q = box.querySelector('input[type="search"]'), qt = 0;
+    q.value = st.q;
+    q.addEventListener('input', function () { clearTimeout(qt); qt = setTimeout(function () { st.q = q.value.trim(); st.shown = 25; renderPage(k, box); }, 120); });
+    box.querySelectorAll('.hr-seg input').forEach(function (r) {
+      r.addEventListener('change', function () { if (k === 'stats') st.sort = r.value; else st.only = r.value; st.shown = 25; renderPage(k, box); });
+    });
+    box.querySelector('.hr-page__more').addEventListener('click', function () { st.shown += 25; renderPage(k, box); });
+    return box;
+  }
+
+  function renderPage(k, box) {
+    var D = PG.data[k], st = PG[k], body = box.querySelector('.hr-page__body');
+    var sub = box.querySelector('.hr-page__sub'), more = box.querySelector('.hr-page__more'), note = box.querySelector('.hr-page__note');
+    if (!D) { body.innerHTML = '<p class="hr-page__empty">Загружаем…</p>'; return; }
+    note.hidden = !D.demo;
+    note.textContent = D.demo ? 'Здесь пример данных. Таблица заполнится с сервера, когда подключим плагин.' : '';
+    if (D.error) { body.innerHTML = '<p class="hr-page__empty">Не получилось загрузить данные с сервера. Обнови страницу через минуту.</p>'; more.hidden = true; sub.textContent = ''; return; }
+    var q = st.q.toLowerCase(), hit = function (r) { return !q || String(r.name || '').toLowerCase().indexOf(q) > -1 || String(r.steamid || '').indexOf(q) > -1; };
+    var html, list, total;
+    if (k === 'stats') {
+      var all = D.rows.map(function (r) {
+        var o = { name: String(r.name || '—'), steamid: String(r.steamid || ''), kills: +r.kills || 0, deaths: +r.deaths || 0, hours: +r.hours || 0, farm: +r.farm || 0 };
+        o.kd = o.deaths ? o.kills / o.deaths : o.kills;
+        return o;
+      }).sort(function (a, b) { return b[st.sort] - a[st.sort] || b.kills - a.kills; });
+      all.forEach(function (r, i) { r.rank = i + 1; });
+      sub.textContent = all.length + ' ' + plural(all.length, 'игрок', 'игрока', 'игроков') + ' за текущий вайп';
+      list = all.filter(hit); total = list.length;
+      var alt = st.sort === 'kills' ? 'kd' : 'kills';
+      var cell = function (c, r) {
+        var v = c === 'kd' ? r.kd.toFixed(2).replace('.', ',') : c === 'hours' ? fmtN(r.hours) + ' ч' : fmtN(r[c]);
+        return '<td class="hr-num' + (c === st.sort ? ' is-on' : '') + (c === alt ? ' is-alt' : '') + '" data-label="' + STAT_COLS.filter(function (x) { return x[0] === c; })[0][1] + '">' + v + '</td>';
+      };
+      html = '<table class="hr-table hr-table--stats"><thead><tr><th class="hr-c-rank" scope="col">#</th><th scope="col">Игрок</th>' +
+        STAT_COLS.map(function (c) {
+          return '<th scope="col" class="hr-num' + (c[0] === st.sort ? ' is-on" aria-sort="descending' : '') + (c[0] === alt ? ' is-alt' : '') + '">' + c[1] + '</th>';
+        }).join('') + '</tr></thead><tbody>' +
+        list.slice(0, st.shown).map(function (r) {
+          return '<tr' + (r.rank <= 3 ? ' class="is-top"' : '') + '><td class="hr-c-rank">' + r.rank + '</td>' +
+            '<td class="hr-c-name"><b>' + esc(r.name) + '</b><span>' + esc(r.steamid) + '</span></td>' +
+            STAT_COLS.map(function (c) { return cell(c[0], r); }).join('') + '</tr>';
+        }).join('') + '</tbody></table>';
+    } else {
+      var now = Date.now();
+      var rows = D.rows.map(function (r) {
+        var at = parseMsk(r.at), un = r.until ? parseMsk(r.until) : null;
+        return { name: String(r.name || '—'), steamid: String(r.steamid || ''), reason: String(r.reason || ''), admin: String(r.admin || ''),
+          at: at, until: un, active: !un || un.getTime() > now };
+      }).sort(function (a, b) { return (b.at ? b.at.getTime() : 0) - (a.at ? a.at.getTime() : 0); });
+      var act = rows.filter(function (r) { return r.active; }).length;
+      sub.textContent = 'Действуют ' + act + ' из ' + rows.length;
+      list = rows.filter(function (r) { return hit(r) && (st.only === 'all' || (st.only === 'active') === r.active); }); total = list.length;
+      html = '<table class="hr-table hr-table--bans"><thead><tr><th scope="col">Игрок</th><th scope="col">Причина</th><th scope="col">Срок</th><th scope="col">Выдан</th><th scope="col">Админ</th></tr></thead><tbody>' +
+        list.slice(0, st.shown).map(function (r) {
+          var term = !r.until ? 'Навсегда' : (r.active ? 'до ' : 'истёк ') + shortDate(r.until);
+          return '<tr' + (r.active ? '' : ' class="is-over"') + '>' +
+            '<td class="hr-c-name"><b>' + esc(r.name) + '</b><span>' + esc(r.steamid) + '</span></td>' +
+            '<td class="hr-c-reason">' + esc(r.reason) + '</td>' +
+            '<td class="hr-c-term' + (r.until ? '' : ' is-perm') + '">' + term + '</td>' +
+            '<td class="hr-c-at" data-label="Выдан">' + (r.at ? shortDate(r.at) : '—') + '</td>' +
+            '<td class="hr-c-admin" data-label="Админ">' + esc(r.admin || '—') + '</td></tr>';
+        }).join('') + '</tbody></table>';
+    }
+    body.innerHTML = total ? html : '<p class="hr-page__empty">' + (st.q ? 'Никого не нашли по запросу «' + esc(st.q) + '».' : 'Пока пусто.') + '</p>';
+    more.hidden = total <= st.shown;
+  }
+
+  function navTabs() {
+    var cur = pageNow() || 'shop';
+    document.querySelectorAll('.HeaderNav-module__wrapper').forEach(function (nav) {
+      Object.keys(HR.pages || {}).forEach(function (k) {
+        if (!nav.querySelector('[data-hr-tab="' + k + '"]')) nav.appendChild(el('<a class="HeaderNav-module__link hr-tab" data-hr-tab="' + k + '" href="/#' + k + '">' + esc(HR.pages[k].title) + '</a>'));
+      });
+      nav.querySelectorAll('.HeaderNav-module__link').forEach(function (a) {
+        var k = a.getAttribute('data-hr-tab') || (a.getAttribute('href') === '/' ? 'shop' : '');
+        var on = !!k && k === cur && location.pathname === '/';
+        toggleAttr(a, 'data-hr-on', on);
+        if (on !== (a.getAttribute('aria-current') === 'page')) { if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+      });
+    });
+  }
+
+  function route(scroll) {
+    if (BOOT.hash && !location.hash && location.pathname === '/' && Date.now() - BOOT.t < 10000 && /^#(stats|bans)$/.test(BOOT.hash)) {
+      history.replaceState(history.state, '', '/' + BOOT.hash);
+    }
+    var k = pageNow(), root = document.documentElement, wrap = document.querySelector('.Index-module__wrapper');
+    navTabs();
+    root.classList.toggle('hr-page-on', !!k && !!wrap);
+    var box = wrap && wrap.querySelector(':scope > .hr-page');
+    if (wrap && !k) route.seen = true;
+    if (!k || !wrap) {
+      if (box) box.remove();
+      if (PG.title0 && / — Hell Rust$/.test(document.title)) document.title = PG.title0;
+      return;
+    }
+    // открыли сайт сразу по ссылке /#stats: раздел ниже баннера, докручиваем к нему
+    if (!route.seen) { route.seen = true; scroll = 'boot'; }
+    if (!box || box.getAttribute('data-page') !== k) {
+      if (box) box.remove();
+      box = buildPage(k);
+      wrap.appendChild(box);
+      loadPage(k, box);
+      renderPage(k, box);
+    }
+    var t = HR.pages[k].title + ' — Hell Rust';
+    if (!/ — Hell Rust$/.test(document.title)) PG.title0 = document.title;
+    if (document.title !== t) document.title = t;
+    if (scroll) {
+      // при загрузке шаблон сам прокручивает в начало, поэтому ждём его и едем без анимации
+      var go = function () {
+        var y = wrap.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: Math.max(0, y), behavior: scroll === 'boot' ? 'auto' : 'smooth' });
+      };
+      if (scroll === 'boot') setTimeout(go, 600); else go();
+    }
+  }
+  // шаблон ставит свой заголовок вкладки браузера («Магазин»), на разделах возвращаем свой
+  new MutationObserver(function () {
+    var k = pageNow();
+    if (k && document.querySelector('.hr-page')) { var t = HR.pages[k].title + ' — Hell Rust'; if (document.title !== t) { if (!/ — Hell Rust$/.test(document.title)) PG.title0 = document.title; document.title = t; } }
+  }).observe(document.head, { childList: true, subtree: true, characterData: true });
+  window.addEventListener('hashchange', function () { BOOT.hash = ''; route(true); });
+  // роутер шаблона меняет адрес через history без событий: после каждой смены сверяем вкладку
+  ['pushState', 'replaceState'].forEach(function (fn) {
+    var orig = history[fn];
+    history[fn] = function () { var r = orig.apply(this, arguments); setTimeout(function () { route(false); }, 0); return r; };
+  });
+  window.addEventListener('popstate', function () { setTimeout(function () { route(false); }, 0); });
+  // «Магазин» — ссылка шаблона: роутер меняет адрес без hashchange, поэтому проверяем сами после клика.
+  // В шторке на телефоне шаблон закрывает меню только по своим ссылкам, наши закрываем сами
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('.HeaderNav-module__link');
+    if (!a) return;
+    BOOT.hash = '';
+    var was = pageNow();
+    if (a.hasAttribute('data-hr-tab') && location.pathname === '/') {
+      var x = document.querySelector('.PlayerMenuMobile-module__menu .CrosseCloseBtn-module__btn');
+      if (x && a.closest('.PlayerMenuMobile-module__nav')) x.click();
+      if (location.hash === '#' + a.getAttribute('data-hr-tab')) { e.preventDefault(); route(true); }
+      return;
+    }
+    if (!a.hasAttribute('data-hr-tab') && was) setTimeout(function () { route(false); var w = document.querySelector('.Index-module__wrapper'); if (w) window.scrollTo({ top: Math.max(0, w.getBoundingClientRect().top + window.pageYOffset - 100), behavior: 'smooth' }); }, 0);
+  }, true);
 
   function apply() {
     setVars();
@@ -834,6 +1081,7 @@
     icons();
     heat();
     searchHint();
+    route(false);
     stick();
   }
 
