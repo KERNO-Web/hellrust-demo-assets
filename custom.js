@@ -25,6 +25,41 @@
       // вид 'item' (предмет на прозрачном фоне) тоже готов: { name: 'Кейсы', look: 'item' }
     ],
 
+    // окно услуги при клике: плюшки справа от арта и наборы сеткой. Ключ = название товара как в админке.
+    // perks: [название, подпись мелким, значение справа]
+    // kits: name, every (как часто), items: [[предмет, количество]]. Предмет — английское название, как у товаров магазина,
+    // или числовой id предмета Rust, если такого товара в магазине нет. Нет записи = обычное окно покупки.
+    perks: {
+      'Hell': {
+        perks: [
+          ['Уникальный префикс', 'команда /settings', 'HELL'],
+          ['Рейты добычи', 'не действует на компоненты', 'x5'],
+          ['Ежедневные наборы', 'команда /kit', 'ниже'],
+          ['Метаболизм', 'здоровье, еда и вода', '100%'],
+          ['Карманный переработчик', 'команда /rec', 'есть'],
+          ['Перезарядка телепорта', 'стандарт 5 мин', '2 мин'],
+          ['Время телепорта', 'стандарт 15 сек', '8 сек'],
+          ['Слоты рюкзака', '', '12'],
+          ['Точек дома', '', '5'],
+          ['Слоты трейда', '', '6']
+        ],
+        kits: [
+          { name: 'Набор «Hell»', every: 'каждые 12 ч', items: [
+            ['Assault Rifle', 1], ['MP5A4', 1], ['8x Zoom Scope', 1], ['Holosight', 1], ['Silencer', 1],
+            ['5.56 Rifle Ammo', 256], ['Incendiary 5.56 Rifle Ammo', 256], ['Pistol Bullet', 256],
+            ['Metal Facemask', 1], ['Metal Chest Plate', 1], ['Hoodie', 1], ['Large Medkit', 5]
+          ] },
+          { name: 'Набор «Ресурсы»', every: 'каждые 24 ч', items: [
+            ['Wood', 40000], ['Metal Fragments', 15000], ['High Quality Metal', 700], ['Sulfur', 15000],
+            ['Charcoal', 7500], ['Cloth', 2500], ['Leather', 2500], ['Scrap', 1000], ['Gun Powder', 3000]
+          ] },
+          { name: 'Набор «Взрывчатка»', every: 'каждые 24 ч', items: [
+            ['Timed Explosive Charge', 12], ['Rocket', 8], ['Rocket Launcher', 1], ['Explosive 5.56 Rifle Ammo', 360], ['Beancan Grenade', 16]
+          ] }
+        ]
+      }
+    },
+
     // категории, которые не показываем во вкладках (имя как в админке). Удалить их совсем можно в админке → Категории
     hiddenCategories: ['Праздники', 'Фермерство', 'Машины', 'DLC'],
 
@@ -391,7 +426,7 @@
       d.products.forEach(function (p) {
         byProduct[p.id] = p.categoryId;
         var base = +p.price || 0, disc = +p.discount || 0;
-        prod[p.id] = { cat: p.categoryId, name: String(p.name || ''), price: +(base - base / 100 * disc).toFixed(2), sale: disc > 0, amount: +p.amount || 1, all: p.shownInAll !== false };
+        prod[p.id] = { cat: p.categoryId, name: String(p.name || ''), price: +(base - base / 100 * disc).toFixed(2), sale: disc > 0, amount: +p.amount || 1, all: p.shownInAll !== false, img: p.img || '' };
         counts[p.categoryId] = (counts[p.categoryId] || 0) + 1;
         if (p.shownInAll !== false) all++;
       });
@@ -1075,6 +1110,51 @@
     if (!a.hasAttribute('data-hr-tab') && was) setTimeout(function () { route(false); var w = document.querySelector('.Index-module__wrapper'); if (w) window.scrollTo({ top: Math.max(0, w.getBoundingClientRect().top + window.pageYOffset - 100), behavior: 'smooth' }); }, 0);
   }, true);
 
+  // ---------- окно услуги: плюшки и наборы из HR.perks ----------
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function itemImg(spec) {
+    if (typeof spec === 'number' || /^-?\d+$/.test(String(spec))) return 'https://cdn.gamestores.app/img/games/rust/' + spec + '.png';
+    if (!CAT.imgByName) {
+      CAT.imgByName = {};
+      Object.keys(CAT.prod).forEach(function (id) { var d = CAT.prod[id]; if (d.img) CAT.imgByName[d.name.trim().toLowerCase()] = d.img; });
+    }
+    return CAT.imgByName[String(spec).trim().toLowerCase()] || '';
+  }
+  function perksModal() {
+    var m = document.querySelector('[data-modalproductid]');
+    if (!m || !CAT) return;
+    var id = m.getAttribute('data-modalproductid'), p = CAT.prod[id], cfg = p && HR.perks[p.name];
+    var old = m.querySelectorAll('.hr-perks, .hr-kits');
+    if (old.length && m.getAttribute('data-hr-perks') === id) return;
+    old.forEach(function (n) { n.remove(); });
+    m.classList.toggle('hr-modal-perks', !!cfg);
+    if (!cfg) { m.removeAttribute('data-hr-perks'); return; }
+    var body = m.querySelector('.boxBody'), img = body && body.querySelector('.productModalImg');
+    if (!body) return;
+    m.setAttribute('data-hr-perks', id);
+    if (cfg.perks && cfg.perks.length) {
+      var list = el('<section class="hr-perks" aria-label="Что даёт"><ul class="hr-perks__list">' + cfg.perks.map(function (r) {
+        return '<li class="hr-perk"><span class="hr-perk__text"><span class="hr-perk__name">' + esc(r[0]) + '</span>' +
+          (r[1] ? '<span class="hr-perk__note">' + esc(r[1]) + '</span>' : '') + '</span>' +
+          (r[2] ? '<span class="hr-perk__val">' + esc(r[2]) + '</span>' : '') + '</li>';
+      }).join('') + '</ul></section>');
+      if (img && img.nextSibling) body.insertBefore(list, img.nextSibling); else body.insertBefore(list, body.firstChild);
+    }
+    if (cfg.kits && cfg.kits.length) {
+      var kits = el('<section class="hr-kits"><h3 class="hr-kits__title">Содержимое</h3>' + cfg.kits.map(function (k) {
+        return '<div class="hr-kit"><div class="hr-kit__head"><span class="hr-kit__name">' + esc(k.name) + '</span>' +
+          (k.every ? '<span class="hr-kit__every">' + esc(k.every) + '</span>' : '') + '</div><ul class="hr-kit__grid">' +
+          (k.items || []).map(function (it) {
+            var src = itemImg(it[0]), label = typeof it[0] === 'number' ? '' : String(it[0]);
+            return '<li class="hr-kit__item" title="' + esc(label) + '">' +
+              (src ? '<img src="' + esc(src) + '" alt="' + esc(label) + '" loading="lazy">' : '<span class="hr-kit__noimg">' + esc(label) + '</span>') +
+              '<span class="hr-kit__qty">×' + esc(it[1] == null ? 1 : it[1]) + '</span></li>';
+          }).join('') + '</ul></div>';
+      }).join('') + '</section>');
+      body.appendChild(kits);
+    }
+  }
+
   function apply() {
     setVars();
     hero();
@@ -1097,6 +1177,7 @@
     searchHint();
     route(false);
     stick();
+    perksModal();
   }
 
   // шаблон на React и перерисовывает блоки, поэтому следим и возвращаем свои

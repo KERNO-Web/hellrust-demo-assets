@@ -1042,3 +1042,51 @@ div.hr-social__link { cursor: default; }
 .hr-tools--sort-only .hr-tools__toggle, .hr-tools--sort-only .hr-filters { display: none !important; }
 /* на витрине скидка справа, звезда избранного остаётся на своём месте слева */
 .Product-module__wrapper[data-hr-feat] .Product-module__favoriteWithDiscount { top: 4px; }
+
+/* ---------- окно услуги с плюшками и наборами (HR.perks) ---------- */
+.ModalLayout-module__modal.hr-modal-perks { width: min(900px, calc(100vw - 48px)); }
+.hr-modal-perks > .boxBody {
+  display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); column-gap: 28px; align-items: start;
+  max-height: calc(100vh - 200px); overflow-y: auto; overscroll-behavior: contain;
+}
+.hr-modal-perks > .boxBody > * { grid-column: 1 / -1; }
+.hr-modal-perks.hr-modal-portrait .productModalImg {
+  grid-column: 1; grid-row: 1; width: 100%; height: auto; aspect-ratio: 3 / 4; margin: 8px 0 22px;
+}
+.hr-modal-perks > .boxBody > .hr-perks { grid-column: 2; grid-row: 1; margin: 8px 0 22px; }
+.hr-perks__list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.hr-perk {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  min-height: 52px; padding: 8px 14px; background: var(--obs);
+}
+.hr-perk__text { display: grid; gap: 2px; min-width: 0; }
+.hr-perk__name { font: 600 14px/1.3 var(--ui); color: var(--stone); }
+.hr-perk__note { font: 500 12px/1.3 var(--ui); color: var(--stone-mute); }
+.hr-perk__val {
+  padding: 6px 9px 5px; background: var(--slab-2); color: var(--ember); white-space: nowrap;
+  font: 400 14px/1 var(--display); font-variant-numeric: tabular-nums;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.hr-kits { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+.hr-kits__title { margin: 0 0 16px; font: 400 18px/1.2 var(--display); color: var(--stone); }
+.hr-kit + .hr-kit { margin-top: 20px; }
+.hr-kit__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.hr-kit__name { font: 600 15px/1.3 var(--ui); color: var(--stone); }
+.hr-kit__every {
+  padding: 5px 8px 4px; background: var(--ember-fill); color: #fff; white-space: nowrap; font: 400 12px/1 var(--display);
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.hr-kit__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.hr-kit__item { position: relative; aspect-ratio: 1; display: grid; place-items: center; background: var(--obs); }
+.hr-kit__item img { width: 68%; height: 68%; object-fit: contain; }
+.hr-kit__noimg { padding: 6px; text-align: center; font: 500 11px/1.25 var(--ui); color: var(--stone-dim); }
+.hr-kit__qty {
+  position: absolute; right: 6px; bottom: 5px; font: 400 12px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone-dim);
+}
+@media (max-width: 600px) {
+  .ModalLayout-module__modal.hr-modal-perks { width: 100%; }
+  .hr-modal-perks > .boxBody { display: block; max-height: calc(100vh - 170px); }
+  .hr-modal-perks.hr-modal-portrait .productModalImg { width: calc(100% + 32px); height: 220px; aspect-ratio: auto; margin: 4px -16px 16px; }
+  .hr-perks { margin: 0 0 18px; }
+  .hr-kit__grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+}
