@@ -1117,3 +1117,10 @@ div.hr-social__link { cursor: default; }
   .hr-connect[data-state="ip"] { padding-left: 10px; padding-right: 10px; }
   .hr-connect[data-state="ip"] .hr-copy__txt { font-size: 12px; letter-spacing: 0; }
 }
+
+/* «Поддержка» (тикеты GameStores) в шапке: как остальные пункты */
+.SupportLink-module__link {
+  position: relative; padding: 24px 0; text-transform: none; letter-spacing: 0; text-decoration: none;
+  font: 600 14px/1 var(--ui); color: var(--stone-dim); transition: color .2s;
+}
+@media (hover: hover) { .SupportLink-module__link:hover { color: var(--stone); } }

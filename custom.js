@@ -1034,6 +1034,11 @@
       Object.keys(HR.pages || {}).forEach(function (k) {
         if (!nav.querySelector('[data-hr-tab="' + k + '"]')) nav.appendChild(el('<a class="HeaderNav-module__link hr-tab" data-hr-tab="' + k + '" href="/#' + k + '">' + esc(HR.pages[k].title) + '</a>'));
       });
+      // ссылка из админки («Ссылки») с тем же названием, что наш раздел, — заглушка под него: прячем, чтобы не было двойных пунктов
+      var ours = Object.keys(HR.pages || {}).map(function (k) { return HR.pages[k].title.trim().toLowerCase(); });
+      nav.querySelectorAll('.HeaderNav-module__link:not([data-hr-tab])').forEach(function (a) {
+        toggleAttr(a, 'data-hr-off', ours.indexOf(a.textContent.trim().toLowerCase()) >= 0);
+      });
       nav.querySelectorAll('.HeaderNav-module__link').forEach(function (a) {
         var k = a.getAttribute('data-hr-tab') || (a.getAttribute('href') === '/' ? 'shop' : '');
         var on = !!k && k === cur && location.pathname === '/';
