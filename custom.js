@@ -285,7 +285,7 @@
         var r = seed / 2147483647, light = r > .5;
         var v = light ? 255 : 0;
         p[i] = p[i + 1] = p[i + 2] = v;
-        p[i + 3] = Math.round((light ? (r - .5) : (.5 - r)) * 2 * (light ? 15 : 24));
+        p[i + 3] = Math.round((light ? (r - .5) : (.5 - r)) * 2 * (light ? 7.5 : 12));
       }
       x.putImageData(d, 0, 0);
       document.documentElement.style.setProperty('--hr-grain', 'url("' + c.toDataURL('image/png') + '")');
