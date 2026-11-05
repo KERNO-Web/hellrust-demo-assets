@@ -25,6 +25,13 @@
       // вид 'item' (предмет на прозрачном фоне) тоже готов: { name: 'Кейсы', look: 'item' }
     ],
 
+    // стартовый промокод в левой колонке; пустой code = блок не показывается
+    promo: { code: 'HELLSTART', text: 'Скидка 10% на товары.', until: 'До\u00a031.12.2026.' },
+
+    // вайпы. global: глобальный вайп Rust, первый четверг месяца, ≈22:00 МСК.
+    // map: вайпы карты этого сервера, время по Москве: ['2026-11-12 18:00', ...]. Пусто = показываем только глобальный.
+    wipes: { global: true, map: [], note: '' },
+
     social: [
       { name: 'ВКонтакте', hint: 'Розыгрыши и новости', url: 'https://vk.com/hellrustserver', icon: 'vk' },
       { name: 'Telegram', hint: 'Вайпы и обновления', url: 'https://t.me/hellrustserver', icon: 'tg' }
@@ -56,12 +63,27 @@
     if (fav && fav.getAttribute('href') !== HR.logo) fav.setAttribute('href', HR.logo);
   }
 
+  // баннер начинаем качать сразу, не дожидаясь, пока React нарисует картинку
+  (function preloadBanner() {
+    var l = document.createElement('link');
+    l.rel = 'preload'; l.as = 'image';
+    l.href = window.matchMedia('(max-width: 600px)').matches ? HR.bannerMobile : HR.banner;
+    document.head.appendChild(l);
+  })();
+
   function hero() {
     var img = document.querySelector('.Banner-module__img');
     if (!img) return;
     var want = window.matchMedia('(max-width: 600px)').matches ? HR.bannerMobile : HR.banner;
     if (img.getAttribute('src') !== want) img.setAttribute('src', want);
     img.alt = 'Hell Rust';
+    // показываем баннер только когда загрузился именно наш арт (иначе мелькает баннер GameStores)
+    if (!img.hasAttribute('data-hr-ready') && !img._hrWait) {
+      img._hrWait = true;
+      var ready = function () { img.setAttribute('data-hr-ready', ''); };
+      if (img.complete && img.naturalWidth && img.getAttribute('src') === want) ready();
+      else { img.addEventListener('load', function on() { if (img.getAttribute('src') === want) { img.removeEventListener('load', on); ready(); } }); setTimeout(ready, 8000); }
+    }
 
     var box = img.parentNode;
     if (box.querySelector('.hr-plate')) return;
@@ -171,6 +193,105 @@
     aside.appendChild(el('<section class="Widgets-module__widgetWrapper hr-social-wrap"><h2 class="boxHeader">Сообщество</h2><div class="hr-social">' + links + '</div></section>'));
   }
 
+  // ---------- левая колонка: промокод и вайпы ----------
+  function copyText(text, ok, failMsg) {
+    var fail = function () { toast(failMsg); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { toast(ok); }, fail);
+    else fail();
+  }
+  function promo() {
+    var aside = document.querySelector('.Widgets-module__wrapper');
+    var P = HR.promo;
+    if (!aside || !P || !P.code || aside.querySelector('.hr-promo')) return;
+    var w = el('<section class="Widgets-module__widgetWrapper hr-promo-wrap"><h2 class="boxHeader">Промокод</h2>' +
+      '<div class="hr-promo">' +
+        '<button type="button" class="hr-promo__code" aria-label="Скопировать промокод ' + P.code + '"><span>' + P.code + '</span>' + icon('copy') + '</button>' +
+        '<p class="hr-promo__text">' + P.text + ' ' + (P.until || '') + '</p>' +
+        '<a class="hr-promo__go" href="/profile" title="После входа: Профиль, блок «Использование промокода»">Ввести в профиле' + icon('arrow') + '</a>' +
+      '</div></section>');
+    w.querySelector('.hr-promo__code').addEventListener('click', function () {
+      copyText(P.code, 'Промокод скопирован. Вставьте его в профиле, в поле «Имя промокода»', 'Не удалось скопировать, промокод: ' + P.code);
+    });
+    aside.appendChild(w);
+  }
+
+  // глобальный вайп Rust: первый четверг месяца, ≈22:00 МСК (19:00 UTC)
+  function firstThursday(y, m) {
+    var d = new Date(Date.UTC(y, m, 1, 19, 0));
+    while (d.getUTCDay() !== 4) d.setUTCDate(d.getUTCDate() + 1);
+    return d;
+  }
+  function wipeList(now) {
+    var W = HR.wipes || {}, out = [];
+    if (W.global) {
+      var y = now.getUTCFullYear(), m = now.getUTCMonth();
+      for (var k = 0; k < 3; k++) out.push({ at: firstThursday(y, m + k), kind: 'Глобальный вайп' });
+    }
+    (W.map || []).forEach(function (s) {
+      var a = String(s).match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/);
+      if (a) out.push({ at: new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4] - 3, +a[5])), kind: 'Вайп карты' });
+    });
+    // вайп считается идущим ещё 2 часа после начала
+    return out.filter(function (w) { return w.at.getTime() + 2 * 3600e3 > now.getTime(); })
+      .sort(function (a, b) { return a.at - b.at; });
+  }
+  var MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  var WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  function mskDate(d) {
+    var m = new Date(d.getTime() + 3 * 3600e3);
+    return { day: m.getUTCDate(), mon: MON[m.getUTCMonth()], wd: WD[m.getUTCDay()], hh: m.getUTCHours(), mm: m.getUTCMinutes() };
+  }
+  function until(ms) {
+    if (ms <= 0) return 'Идёт сейчас';
+    var min = Math.floor(ms / 60e3), d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), mi = min % 60;
+    if (d) return d + ' ' + plural(d, 'день', 'дня', 'дней') + ' ' + h + ' ч';
+    if (h) return h + ' ч ' + mi + ' мин';
+    return mi + ' мин';
+  }
+  function wipeRender(box) {
+    var now = new Date(), l = wipeList(now);
+    if (!l.length) { box.innerHTML = '<p class="hr-wipe__when">Дат пока нет</p>'; return; }
+    var n = l[0], d = mskDate(n.at), time = (d.hh < 10 ? '0' : '') + d.hh + ':' + (d.mm < 10 ? '0' : '') + d.mm;
+    var approx = n.kind === 'Глобальный вайп' ? '≈' : '';
+    var rest = l.slice(1, 3).map(function (w) { var x = mskDate(w.at); return '<li>' + x.day + ' ' + x.mon + ', ' + x.wd + (w.kind === 'Вайп карты' ? ', карта' : '') + '</li>'; }).join('');
+    var t = mskDate(now), day = (t.day === d.day && t.mon === d.mon) ? 'сегодня' : d.day + ' ' + d.mon + ', ' + d.wd;
+    var html = '<p class="hr-wipe__left"><span class="hr-sr">До вайпа: </span>' + until(n.at - now) + '</p>' +
+      '<p class="hr-wipe__when">' + n.kind + ' ' + day + ', ' + approx + time + ' МСК</p>' +
+      (rest ? '<ul class="hr-wipe__next" aria-label="Следующие вайпы">' + rest + '</ul>' : '') +
+      (HR.wipes.note ? '<p class="hr-wipe__note">' + HR.wipes.note + '</p>' : '');
+    if (box._h !== html) { box._h = html; box.innerHTML = html; }
+  }
+  function wipes() {
+    var aside = document.querySelector('.Widgets-module__wrapper');
+    var W = HR.wipes;
+    if (!aside || !W || (!W.global && !(W.map || []).length) || aside.querySelector('.hr-wipe')) return;
+    var w = el('<section class="Widgets-module__widgetWrapper hr-wipe-wrap"><h2 class="boxHeader">Вайп</h2><div class="hr-wipe"></div></section>');
+    aside.appendChild(w);
+    var box = w.querySelector('.hr-wipe');
+    wipeRender(box);
+    if (!wipes.t) wipes.t = setInterval(function () { var b = document.querySelector('.hr-wipe'); if (b && !document.hidden) wipeRender(b); }, 60e3);
+  }
+
+  // зерно камня: один маленький тайл шума, рисуем на canvas один раз и кладём фоном на каменные поверхности
+  function grain() {
+    if (grain.done) return;
+    grain.done = true;
+    try {
+      var N = 128, c = document.createElement('canvas');
+      c.width = c.height = N;
+      var x = c.getContext('2d'), d = x.createImageData(N, N), p = d.data, seed = 7;
+      for (var i = 0; i < p.length; i += 4) {
+        seed = (seed * 16807) % 2147483647;
+        var r = seed / 2147483647, light = r > .5;
+        var v = light ? 255 : 0;
+        p[i] = p[i + 1] = p[i + 2] = v;
+        p[i + 3] = Math.round((light ? (r - .5) : (.5 - r)) * 2 * (light ? 15 : 24));
+      }
+      x.putImageData(d, 0, 0);
+      document.documentElement.style.setProperty('--hr-grain', 'url("' + c.toDataURL('image/png') + '")');
+    } catch (e) {}
+  }
+
   // число по-русски: «10 000», «1500», копейки только если они не ,00. Пробел неразрывный
   function num(v) {
     var m = String(v).replace(/[\s\u00a0]/g, '').match(/^(\d+)(?:[.,](\d+))?$/);
@@ -205,10 +326,12 @@
     fetch('/api/v1/products.list', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) {
       var d = j && j.data;
       if (!d || !d.products) return;
-      var names = {}, byProduct = {}, counts = {}, all = 0;
+      var names = {}, byProduct = {}, counts = {}, all = 0, prod = {};
       d.categories.forEach(function (c) { names[c.id] = c.name; counts[c.id] = 0; });
       d.products.forEach(function (p) {
         byProduct[p.id] = p.categoryId;
+        var base = +p.price || 0, disc = +p.discount || 0;
+        prod[p.id] = { cat: p.categoryId, name: String(p.name || ''), price: +(base - base / 100 * disc).toFixed(2), sale: disc > 0, amount: +p.amount || 1, all: p.shownInAll !== false };
         counts[p.categoryId] = (counts[p.categoryId] || 0) + 1;
         if (p.shownInAll !== false) all++;
       });
@@ -219,7 +342,7 @@
           if (f.name.trim().toLowerCase() === String(c.name).trim().toLowerCase()) feat[c.id] = { look: f.look, order: i - HR.featured.length };
         });
       });
-      CAT = { names: names, byProduct: byProduct, counts: counts, feat: feat };
+      CAT = { names: names, byProduct: byProduct, counts: counts, feat: feat, prod: prod };
       apply();
     }).catch(function () { loadCatalog.busy = false; });
   }
@@ -227,8 +350,20 @@
   // число предметов рядом с каждой категорией
   function catCounts() {
     if (!CAT) return;
+    var counts = CAT.counts;
+    if (fActive()) {
+      counts = { 0: 0 };
+      Object.keys(CAT.prod).forEach(function (id) {
+        var d = CAT.prod[id];
+        if (counts[d.cat] == null) counts[d.cat] = 0;
+        if (!passes(d)) return;
+        counts[d.cat]++;
+        if (d.all) counts[0]++;
+      });
+      Object.keys(CAT.counts).forEach(function (c) { if (counts[c] == null) counts[c] = 0; });
+    }
     document.querySelectorAll('.Categories-module__category').forEach(function (b) {
-      var n = CAT.counts[b.getAttribute('data-categoryid')];
+      var n = counts[b.getAttribute('data-categoryid')];
       var v = n == null ? '' : String(n);
       if (b.getAttribute('data-hr-n') !== v) b.setAttribute('data-hr-n', v);
       var id = b.getAttribute('data-categoryid'), f = CAT.feat[id];
@@ -245,26 +380,33 @@
     var tiles = grid.querySelectorAll('.Product-module__wrapper');
     // Шаблон сортирует товары по индексу общим списком, поэтому одна категория может идти вперемешку
     // с другими. Собираем группы по категории, а визуально сводим их вместе через CSS order.
-    var list = [], byCat = {}, tileGroup = [];
-    tiles.forEach(function (t) {
-      var c = CAT.byProduct[t.getAttribute('data-productid')];
+    // Внутри группы порядок задаёт сортировка, отфильтрованные плитки прячем атрибутом data-hr-off.
+    var list = [], byCat = {}, shown = 0;
+    tiles.forEach(function (t, idx) {
+      var id = t.getAttribute('data-productid'), c = CAT.byProduct[id], api = CAT.prod[id] || {};
       var ps = t.querySelectorAll('.Product-module__price > span'), p = ps[ps.length - 1];
       var v = p ? parseFloat(p.textContent.replace(/[^\d.,]/g, '').replace(',', '.')) : NaN;
+      var nm = t.querySelector('.Product-module__name');
+      var d = {
+        t: t, idx: idx,
+        price: isNaN(v) ? (api.price || 0) : v,
+        sale: !!api.sale || !!t.querySelector('.Product-module__discount'),
+        amount: api.amount || (t.querySelector('.Product-module__count') ? 2 : 1),
+        name: api.name || (nm ? nm.textContent : '')
+      };
+      d.on = passes(d);
       var g = byCat[c];
-      if (!g) { g = byCat[c] = { cat: c, first: t, n: 0, min: Infinity, max: -Infinity }; list.push(g); }
-      g.n++;
-      tileGroup.push(g);
-      if (!isNaN(v)) { g.min = Math.min(g.min, v); g.max = Math.max(g.max, v); }
+      if (!g) { g = byCat[c] = { cat: c, first: t, n: 0, min: Infinity, max: -Infinity, items: [] }; list.push(g); }
+      g.items.push(d);
+      if (d.on) { g.n++; shown++; g.min = Math.min(g.min, d.price); g.max = Math.max(g.max, d.price); }
     });
-    list.forEach(function (g, i) {
-      var f = CAT.feat[g.cat];
-      g.ord = f ? f.order * 1000 : i + 1;
-    });
+    // группы: витринные сверху в порядке HR.featured, остальные как пришли
+    list.forEach(function (g, i) { var f = CAT.feat[g.cat]; g.feat = f; g.rank = f ? f.order * 1000 : i + 1; });
+    list.slice().sort(function (a, b) { return a.rank - b.rank; }).forEach(function (g, k) { g.ord = (k + 1) * 1000; });
     var want = new Map();
     list.forEach(function (g) {
       if (g.cat == null || !CAT.names[g.cat]) return;
-      var price = !isFinite(g.min) ? '' : g.min === g.max ? ', ' + num(g.min) + '\u00a0₽' : ', от ' + num(g.min) + ' до ' + num(g.max) + '\u00a0₽';
-      g.feat = CAT.feat[g.cat];
+      var price = !g.n ? '' : g.min === g.max ? ', ' + num(g.min) + ' ₽' : ', от ' + num(g.min) + ' до ' + num(g.max) + ' ₽';
       g.meta = g.feat ? price.slice(2) : g.n + ' ' + plural(g.n, 'предмет', 'предмета', 'предметов') + price;
       g.key = g.cat + '|' + g.meta;
       want.set(g.first, g);
@@ -282,24 +424,120 @@
       h.lastChild.textContent = g.meta;
       grid.insertBefore(h, tile);
     });
-    // витринные группы встают наверх через CSS order: узлы React остаются на своих местах
-    // у заголовка и всех плиток группы один order; заголовок стоит в DOM перед первой плиткой, поэтому идёт первым
+    var cmp = {
+      'price-asc': function (a, b) { return a.price - b.price || a.idx - b.idx; },
+      'price-desc': function (a, b) { return b.price - a.price || a.idx - b.idx; },
+      'name': function (a, b) { return a.name.localeCompare(b.name, 'ru') || a.idx - b.idx; },
+      'sale': function (a, b) { return (b.sale - a.sale) || a.idx - b.idx; }
+    }[F.sort] || function (a, b) { return a.idx - b.idx; };
     var top = null;
     list.forEach(function (g) {
       var h = g.first.previousElementSibling;
-      if (!h || !h.classList.contains('hr-group')) return;
-      var o = String(g.ord);
-      if (h.style.order !== o) h.style.order = o;
-      if (g.feat) h.setAttribute('data-hr-feat', g.feat.look); else h.removeAttribute('data-hr-feat');
-      if (!top || g.ord < top.o) top = { h: h, o: g.ord };
+      if (h && h.classList.contains('hr-group')) {
+        var o = String(g.ord);
+        if (h.style.order !== o) h.style.order = o;
+        if (g.feat) h.setAttribute('data-hr-feat', g.feat.look); else h.removeAttribute('data-hr-feat');
+        toggleAttr(h, 'data-hr-off', !g.n);
+        if (g.n && (!top || g.ord < top.o)) top = { h: h, o: g.ord };
+      }
+      g.items.slice().sort(cmp).forEach(function (d, r) {
+        var t = d.t, look = g.feat ? g.feat.look : null, o = String(g.ord + 1 + r);
+        if (t.getAttribute('data-hr-feat') !== look) { if (look) t.setAttribute('data-hr-feat', look); else t.removeAttribute('data-hr-feat'); }
+        if (t.style.order !== o) t.style.order = o;
+        toggleAttr(t, 'data-hr-off', !d.on);
+      });
     });
     grid.querySelectorAll(':scope > .hr-group').forEach(function (h) { h.classList.toggle('hr-group--top', !!top && h === top.h); });
-    tiles.forEach(function (t, i) {
-      var g = tileGroup[i], f = CAT.feat[g.cat];
-      var look = f ? f.look : null, o = String(g.ord);
-      if (t.getAttribute('data-hr-feat') !== look) { if (look) t.setAttribute('data-hr-feat', look); else t.removeAttribute('data-hr-feat'); }
-      if (t.style.order !== o) t.style.order = o;
+    // всё отфильтровано: своё пустое состояние с кнопкой сброса
+    var none = grid.querySelector(':scope > .hr-nores');
+    var empty = tiles.length > 0 && shown === 0;
+    if (empty && !none) {
+      none = el('<div class="hr-nores" role="status"><p class="hr-nores__title">Ничего не подходит</p><p class="hr-nores__text">Под выбранные фильтры здесь нет предметов.</p><button type="button" class="hr-nores__reset">Сбросить фильтры</button></div>');
+      none.querySelector('button').addEventListener('click', resetFilters);
+      grid.insertBefore(none, grid.firstChild);
+    }
+    if (none) toggleAttr(none, 'data-hr-off', !empty);
+  }
+  function toggleAttr(n, a, on) { if (on !== n.hasAttribute(a)) { if (on) n.setAttribute(a, ''); else n.removeAttribute(a); } }
+
+  // ---------- сортировка и фильтры ----------
+  // Выбор хранится в localStorage. Узлы React не двигаем: порядок через CSS order, скрытие атрибутом.
+  var FKEY = 'hr-filter-1', F = { sort: '', min: '', max: '', sale: false, pack: '' };
+  try { var sv = JSON.parse(localStorage.getItem(FKEY)); if (sv) Object.keys(F).forEach(function (k) { if (k in sv) F[k] = sv[k]; }); } catch (e) {}
+  function saveF() { try { localStorage.setItem(FKEY, JSON.stringify(F)); } catch (e) {} }
+  function fActive() { return F.min !== '' || F.max !== '' || !!F.sale || F.pack !== ''; }
+  function fCount() { return (F.min !== '' || F.max !== '' ? 1 : 0) + (F.sale ? 1 : 0) + (F.pack !== '' ? 1 : 0); }
+  function passes(d) {
+    if (F.min !== '' && d.price < +F.min) return false;
+    if (F.max !== '' && d.price > +F.max) return false;
+    if (F.sale && !d.sale) return false;
+    if (F.pack === 'single' && d.amount > 1) return false;
+    if (F.pack === 'pack' && d.amount <= 1) return false;
+    return true;
+  }
+  function resetFilters() {
+    F.min = ''; F.max = ''; F.sale = false; F.pack = '';
+    saveF(); syncTools(); apply();
+  }
+  var SORTS = [['', 'По умолчанию'], ['price-asc', 'Сначала дешёвые'], ['price-desc', 'Сначала дорогие'], ['name', 'По названию'], ['sale', 'Сначала со скидкой']];
+  function syncTools() {
+    var b = document.querySelector('.hr-tools');
+    if (!b) return;
+    b.querySelector('.hr-sort__select').value = F.sort;
+    var i = b.querySelectorAll('.hr-price input');
+    if (document.activeElement !== i[0]) i[0].value = F.min;
+    if (document.activeElement !== i[1]) i[1].value = F.max;
+    b.querySelector('.hr-check input').checked = !!F.sale;
+    b.querySelectorAll('.hr-seg input').forEach(function (r) { r.checked = r.value === F.pack; });
+    var n = fCount();
+    b.querySelector('.hr-tools__n').textContent = n ? String(n) : '';
+    toggleAttr(b, 'data-active', n > 0);
+  }
+  function tools() {
+    var search = document.querySelector('.Shop-module__wrapper .Search-module__wrapper');
+    if (!search) return;
+    var b = document.querySelector('.hr-tools');
+    if (b && b.previousElementSibling === search) return syncTools();
+    if (b) { search.parentNode.insertBefore(b, search.nextSibling); return syncTools(); }
+    b = el('<div class="hr-tools" role="group" aria-label="Сортировка и фильтры">' +
+      '<label class="hr-sort"><span class="hr-sr">Сортировка</span><select class="hr-sort__select">' +
+        SORTS.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') +
+      '</select>' + icon('chev') + '</label>' +
+      '<button type="button" class="hr-tools__toggle" aria-expanded="false" aria-controls="hr-filters">' + icon('filter') + 'Фильтры<b class="hr-tools__n"></b></button>' +
+      '<div class="hr-filters" id="hr-filters">' +
+        '<fieldset class="hr-price"><legend class="hr-sr">Цена, ₽</legend><span class="hr-price__label" aria-hidden="true">Цена</span>' +
+          '<input type="text" inputmode="numeric" autocomplete="off" placeholder="от" aria-label="Цена от, ₽">' +
+          '<input type="text" inputmode="numeric" autocomplete="off" placeholder="до" aria-label="Цена до, ₽"></fieldset>' +
+        '<label class="hr-check"><input type="checkbox"><span>Со скидкой</span></label>' +
+        '<fieldset class="hr-seg"><legend class="hr-sr">Количество в товаре</legend>' +
+          '<label><input type="radio" name="hr-pack" value=""><span>Любое</span></label>' +
+          '<label><input type="radio" name="hr-pack" value="single"><span>Поштучно</span></label>' +
+          '<label><input type="radio" name="hr-pack" value="pack"><span>Пачками</span></label></fieldset>' +
+        '<button type="button" class="hr-tools__reset">Сбросить</button>' +
+      '</div></div>');
+    var sel = b.querySelector('select');
+    sel.addEventListener('change', function () { F.sort = sel.value; saveF(); apply(); });
+    var pr = b.querySelectorAll('.hr-price input'), pt = 0;
+    pr.forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var v = inp.value.replace(/[^\d]/g, '').slice(0, 7);
+        if (inp.value !== v) inp.value = v;
+        clearTimeout(pt);
+        F.min = pr[0].value; F.max = pr[1].value; saveF();
+        pt = setTimeout(apply, 250);
+      });
     });
+    b.querySelector('.hr-check input').addEventListener('change', function (e) { F.sale = e.target.checked; saveF(); apply(); });
+    b.querySelectorAll('.hr-seg input').forEach(function (r) { r.addEventListener('change', function () { F.pack = r.value; saveF(); apply(); }); });
+    b.querySelector('.hr-tools__reset').addEventListener('click', resetFilters);
+    var tg = b.querySelector('.hr-tools__toggle');
+    tg.addEventListener('click', function () {
+      var open = !b.classList.contains('is-open');
+      b.classList.toggle('is-open', open);
+      tg.setAttribute('aria-expanded', String(open));
+    });
+    search.parentNode.insertBefore(b, search.nextSibling);
+    syncTools();
   }
 
   // Иконки Rust нарисованы в разном масштабе, многие почти чёрные.
@@ -540,11 +778,15 @@
     setVars();
     hero();
     connectBtn();
+    grain();
+    promo();
+    wipes();
     social();
     toastRegion();
     prices();
     emptyState();
     loadCatalog();
+    tools();
     catCounts();
     groups();
     crops();
