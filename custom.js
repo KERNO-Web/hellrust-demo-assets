@@ -184,7 +184,7 @@
 
   function social() {
     var aside = document.querySelector('.Widgets-module__wrapper');
-    if (!aside || !HR.social.length || aside.querySelector('.hr-social')) return;
+    if (!aside || !HR.social.length || document.querySelector('.hr-social')) return;
     var links = HR.social.map(function (s) {
       return '<a class="hr-social__link" href="' + s.url + '" target="_blank" rel="noopener"><span class="hr-social__ico">' + icon(s.icon) + '</span>' +
         '<span><span class="hr-social__name">' + s.name + '</span><span class="hr-social__hint">' + s.hint + '</span></span>' +
@@ -202,7 +202,7 @@
   function promo() {
     var aside = document.querySelector('.Widgets-module__wrapper');
     var P = HR.promo;
-    if (!aside || !P || !P.code || aside.querySelector('.hr-promo')) return;
+    if (!aside || !P || !P.code || document.querySelector('.hr-promo')) return;
     var w = el('<section class="Widgets-module__widgetWrapper hr-promo-wrap"><h2 class="boxHeader">Промокод</h2>' +
       '<div class="hr-promo">' +
         '<button type="button" class="hr-promo__code" aria-label="Скопировать промокод ' + P.code + '"><span>' + P.code + '</span>' + icon('copy') + '</button>' +
@@ -213,6 +213,46 @@
       copyText(P.code, 'Промокод скопирован. Вставьте его в профиле, в поле «Имя промокода»', 'Не удалось скопировать, промокод: ' + P.code);
     });
     aside.appendChild(w);
+  }
+
+  // На телефоне левая колонка живёт в шторке меню (бургер), а не внизу страницы.
+  // Свои блоки (промокод, вайп, сообщество) переносим туда целиком и возвращаем на широком экране.
+  // Мониторинг — узел React, его не двигаем: в шторке зеркало с названием и онлайном, обновляется на каждом apply().
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function drawer() {
+    var body = document.querySelector('.PlayerMenuMobile-module__body');
+    var aside = document.querySelector('.Index-module__wrapper > .Widgets-module__wrapper');
+    if (!body || !aside) return;
+    var btn = document.querySelector('.PlayerMenuMobile-module__mobileMenuBtn');
+    var mobile = !!btn && getComputedStyle(btn).display !== 'none';
+    document.documentElement.classList.toggle('hr-drawer-on', mobile);
+    var d = body.querySelector('.hr-drawer');
+    if (!d) { d = el('<div class="hr-drawer"></div>'); body.appendChild(d); }
+    var parts = ['.hr-promo-wrap', '.hr-mon-wrap', '.hr-wipe-wrap', '.hr-social-wrap'];
+    if (!d.querySelector('.hr-mon-wrap')) d.appendChild(el('<section class="hr-mon-wrap" hidden><h2 class="boxHeader">Сервер</h2><div class="hr-mon"></div></section>'));
+    parts.forEach(function (sel) {
+      var n = document.querySelector(sel);
+      if (!n || sel === '.hr-mon-wrap') return;
+      var home = mobile ? d : aside;
+      if (n.parentNode !== home) home.appendChild(n);
+    });
+    // порядок в шторке как в колонке
+    var want = parts.map(function (sel) { return d.querySelector(':scope > ' + sel); }).filter(Boolean);
+    var ok = want.every(function (n, i) { return d.children[i] === n; });
+    if (!ok) want.forEach(function (n) { d.appendChild(n); });
+    // зеркало мониторинга
+    var mon = d.querySelector('.hr-mon-wrap'), rows = [];
+    document.querySelectorAll('.Widgets-module__wrapper .MonitoringServer-module__wrapper').forEach(function (s) {
+      var nm = s.querySelector('.MonitoringServer-module__name'), inf = s.querySelector('.MonitoringServer-module__info > span');
+      if (!nm || !inf) return;
+      var t = inf.textContent.split('/');
+      rows.push('<div class="hr-mon__row"><span class="hr-mon__name">' + esc(nm.textContent) + '</span><span class="hr-mon__n">' +
+        esc((t[0] || '').trim()) + '<i>/</i>' + esc((t[1] || '').trim()) + '</span></div>');
+    });
+    var html = rows.join('');
+    mon.hidden = !html;
+    var box = mon.querySelector('.hr-mon');
+    if (box._h !== html) { box._h = html; box.innerHTML = html; }
   }
 
   // глобальный вайп Rust: первый четверг месяца, ≈22:00 МСК (19:00 UTC)
@@ -264,7 +304,7 @@
   function wipes() {
     var aside = document.querySelector('.Widgets-module__wrapper');
     var W = HR.wipes;
-    if (!aside || !W || (!W.global && !(W.map || []).length) || aside.querySelector('.hr-wipe')) return;
+    if (!aside || !W || (!W.global && !(W.map || []).length) || document.querySelector('.hr-wipe')) return;
     var w = el('<section class="Widgets-module__widgetWrapper hr-wipe-wrap"><h2 class="boxHeader">Вайп</h2><div class="hr-wipe"></div></section>');
     aside.appendChild(w);
     var box = w.querySelector('.hr-wipe');
@@ -285,7 +325,7 @@
         var r = seed / 2147483647, light = r > .5;
         var v = light ? 255 : 0;
         p[i] = p[i + 1] = p[i + 2] = v;
-        p[i + 3] = Math.round((light ? (r - .5) : (.5 - r)) * 2 * (light ? 7.5 : 12));
+        p[i + 3] = Math.round((light ? (r - .5) : (.5 - r)) * 2 * (light ? 6 : 9.6));
       }
       x.putImageData(d, 0, 0);
       document.documentElement.style.setProperty('--hr-grain', 'url("' + c.toDataURL('image/png') + '")');
@@ -782,6 +822,7 @@
     promo();
     wipes();
     social();
+    drawer();
     toastRegion();
     prices();
     emptyState();
@@ -807,6 +848,6 @@
   // из пустой выдачи в пустую React узлы не меняет, только классы и значение поля: ловим ввод и клики
   document.addEventListener('input', later, true);
   document.addEventListener('click', later, true);
-  window.addEventListener('resize', function () { hero(); stick(); });
+  window.addEventListener('resize', function () { hero(); stick(); drawer(); });
   apply();
 })();

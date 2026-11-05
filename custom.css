@@ -274,11 +274,11 @@ body {
 }
 .Widgets-module__widgetWrapper, .Widgets-module__widgetWrapper + .Widgets-module__widgetWrapper { margin: 0; }
 /* каждый блок колонки — свой раздел: заголовок с линией-трещиной, как у групп справа */
-.Widgets-module__wrapper .boxHeader {
+.Widgets-module__wrapper .boxHeader, .hr-drawer .boxHeader {
   display: flex; align-items: center; gap: 12px; margin: 0 0 14px;
   font: 400 16px/1.1 var(--display); color: var(--stone); white-space: nowrap;
 }
-.Widgets-module__wrapper .boxHeader::after {
+.Widgets-module__wrapper .boxHeader::after, .hr-drawer .boxHeader::after {
   content: ""; flex: 1 1 auto; height: 1px; margin-top: 2px;
   background: linear-gradient(90deg, var(--ember) 0, rgba(255, 69, 38, 0) 56px) no-repeat, var(--line);
 }
@@ -779,6 +779,43 @@ body {
   .hr-steps .hr-step:nth-child(odd) { padding-left: 0; border-left: 0; }
 }
 
+/* ---------- шторка меню (бургер): вход, язык и левая колонка ---------- */
+.PlayerMenuMobile-module__menu {
+  background: var(--grain), var(--obs); border-left: 1px solid var(--line-2); color: var(--stone); box-shadow: none;
+}
+.PlayerMenuMobile-module__header {
+  display: flex; align-items: center; justify-content: space-between; height: 60px; padding: 0 16px; margin: 0;
+  background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  font: 400 18px/1 var(--display); color: var(--stone);
+}
+.PlayerMenuMobile-module__header .CrosseCloseBtn-module__line { background: var(--stone-dim); }
+.PlayerMenuMobile-module__body { padding: 20px 16px max(28px, env(safe-area-inset-bottom)); background: none; overscroll-behavior: contain; }
+.PlayerMenuMobile-module__playerMenu { display: grid; grid-template-columns: auto 1fr; gap: 10px; margin: 0; }
+.PlayerMenuMobile-module__playerMenu > * { margin: 0; }
+.PlayerMenuMobile-module__langSwitcher .LangSwitcher-module__btn {
+  height: 44px; min-width: 56px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 0; background: none;
+}
+.PlayerMenuMobile-module__loginLink {
+  display: grid; place-items: center; height: 44px; padding: 0 16px; border: 0; border-radius: 0; clip-path: var(--chip);
+  background: var(--ember-fill); font: 700 14px/1 var(--ui); color: #fff; text-decoration: none;
+}
+.PlayerMenuMobile-module__nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 18px 0 0; padding: 0; }
+.PlayerMenuMobile-module__nav .HeaderNav-module__link { padding: 6px 0; }
+.hr-drawer { display: flex; flex-direction: column; gap: 32px; margin-top: 32px; text-align: left; }
+.hr-mon-wrap { order: 2; }
+:root:not(.hr-drawer-on) .hr-drawer { display: none; }
+.hr-drawer .boxHeader { padding: 0; background: none; border: 0; border-radius: 0; }
+.hr-drawer > section { margin: 0; padding: 0; background: none; border: 0; }
+/* сервер в шторке: зеркало мониторинга */
+.hr-mon { display: flex; flex-direction: column; }
+.hr-mon__row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.hr-mon__row + .hr-mon__row { border-top: 1px solid var(--line); }
+.hr-mon__name { font: 600 14px/1.3 var(--ui); color: var(--stone-dim); }
+.hr-mon__n { font: 400 20px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); white-space: nowrap; }
+.hr-mon__n i { margin: 0 6px; font-style: normal; color: var(--stone-mute); }
+/* пока колонка в шторке, внизу страницы её нет */
+.hr-drawer-on .Index-module__wrapper > .Widgets-module__wrapper { display: none; }
+
 /* ---------- узкий десктоп: обычных 4 в ряд ---------- */
 @media (max-width: 1199px) {
   .Products-module__wrapper > .Product-module__wrapper { grid-column: span 3; }
@@ -804,13 +841,15 @@ body {
   /* категории: лента, прилипает под шапкой */
   .Categories-module__categories, .hr-stick .Categories-module__categories, .hr-stick-toc .Categories-module__categories {
     grid-column: 1; grid-row: 4; position: sticky; top: 60px; z-index: 5;
-    flex-direction: row; gap: 0 22px; overflow-x: auto; scrollbar-width: none;
+    /* только вбок: если лента прокручивается и по вертикали (хоть на 1 px), телефон отдаёт ей часть
+       вертикального свайпа и подписи дёргаются вверх-вниз */
+    flex-direction: row; gap: 0 22px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
     margin: 0 -24px; padding: 4px 24px 0; background: rgba(13, 10, 9, .96); border-bottom: 1px solid var(--line);
   }
   .Categories-module__categories::-webkit-scrollbar { display: none; }
   .Categories-module__category { flex: none; width: auto; gap: 6px; padding: 14px 0 13px; }
   .Categories-module__category::before {
-    order: 3; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; min-width: 0; margin: 0;
+    order: 3; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; min-width: 0; margin: 0;
     background: var(--ember); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease);
   }
   .Categories-module__category.Categories-module__active::before { transform: scaleX(1); }
