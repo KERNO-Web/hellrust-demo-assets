@@ -243,14 +243,22 @@
     var grid = document.querySelector('.Products-module__wrapper');
     if (!grid || !CAT) return;
     var tiles = grid.querySelectorAll('.Product-module__wrapper');
-    var list = [], cur = null;
+    // Шаблон сортирует товары по индексу общим списком, поэтому одна категория может идти вперемешку
+    // с другими. Собираем группы по категории, а визуально сводим их вместе через CSS order.
+    var list = [], byCat = {}, tileGroup = [];
     tiles.forEach(function (t) {
       var c = CAT.byProduct[t.getAttribute('data-productid')];
       var ps = t.querySelectorAll('.Product-module__price > span'), p = ps[ps.length - 1];
       var v = p ? parseFloat(p.textContent.replace(/[^\d.,]/g, '').replace(',', '.')) : NaN;
-      if (!cur || cur.cat !== c) { cur = { cat: c, first: t, n: 0, min: Infinity, max: -Infinity }; list.push(cur); }
-      cur.n++;
-      if (!isNaN(v)) { cur.min = Math.min(cur.min, v); cur.max = Math.max(cur.max, v); }
+      var g = byCat[c];
+      if (!g) { g = byCat[c] = { cat: c, first: t, n: 0, min: Infinity, max: -Infinity }; list.push(g); }
+      g.n++;
+      tileGroup.push(g);
+      if (!isNaN(v)) { g.min = Math.min(g.min, v); g.max = Math.max(g.max, v); }
+    });
+    list.forEach(function (g, i) {
+      var f = CAT.feat[g.cat];
+      g.ord = f ? f.order * 1000 : i + 1;
     });
     var want = new Map();
     list.forEach(function (g) {
@@ -275,19 +283,20 @@
       grid.insertBefore(h, tile);
     });
     // витринные группы встают наверх через CSS order: узлы React остаются на своих местах
+    // у заголовка и всех плиток группы один order; заголовок стоит в DOM перед первой плиткой, поэтому идёт первым
     var top = null;
     list.forEach(function (g) {
       var h = g.first.previousElementSibling;
       if (!h || !h.classList.contains('hr-group')) return;
-      var o = g.feat ? String(g.feat.order) : '';
+      var o = String(g.ord);
       if (h.style.order !== o) h.style.order = o;
       if (g.feat) h.setAttribute('data-hr-feat', g.feat.look); else h.removeAttribute('data-hr-feat');
-      if (!top || (g.feat ? g.feat.order : 0) < top.o) top = { h: h, o: g.feat ? g.feat.order : 0 };
+      if (!top || g.ord < top.o) top = { h: h, o: g.ord };
     });
     grid.querySelectorAll(':scope > .hr-group').forEach(function (h) { h.classList.toggle('hr-group--top', !!top && h === top.h); });
-    tiles.forEach(function (t) {
-      var f = CAT.feat[CAT.byProduct[t.getAttribute('data-productid')]];
-      var look = f ? f.look : null, o = f ? String(f.order) : '';
+    tiles.forEach(function (t, i) {
+      var g = tileGroup[i], f = CAT.feat[g.cat];
+      var look = f ? f.look : null, o = String(g.ord);
       if (t.getAttribute('data-hr-feat') !== look) { if (look) t.setAttribute('data-hr-feat', look); else t.removeAttribute('data-hr-feat'); }
       if (t.style.order !== o) t.style.order = o;
     });
