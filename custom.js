@@ -25,40 +25,17 @@
       // вид 'item' (предмет на прозрачном фоне) тоже готов: { name: 'Кейсы', look: 'item' }
     ],
 
-    // окно услуги при клике: плюшки справа от арта и наборы сеткой. Ключ = название товара как в админке.
-    // perks: [название, подпись мелким, значение справа]
-    // kits: name, every (как часто), items: [[предмет, количество]]. Предмет — английское название, как у товаров магазина,
-    // или числовой id предмета Rust, если такого товара в магазине нет. Нет записи = обычное окно покупки.
-    perks: {
-      'Hell': {
-        perks: [
-          ['Уникальный префикс', 'команда /settings', 'HELL'],
-          ['Рейты добычи', 'не действует на компоненты', 'x5'],
-          ['Ежедневные наборы', 'команда /kit', 'ниже'],
-          ['Метаболизм', 'здоровье, еда и вода', '100%'],
-          ['Карманный переработчик', 'команда /rec', 'есть'],
-          ['Перезарядка телепорта', 'стандарт 5 мин', '2 мин'],
-          ['Время телепорта', 'стандарт 15 сек', '8 сек'],
-          ['Слоты рюкзака', '', '12'],
-          ['Точек дома', '', '5'],
-          ['Слоты трейда', '', '6']
-        ],
-        kits: [
-          { name: 'Набор «Hell»', every: 'каждые 12 ч', items: [
-            ['Assault Rifle', 1], ['MP5A4', 1], ['8x Zoom Scope', 1], ['Holosight', 1], ['Silencer', 1],
-            ['5.56 Rifle Ammo', 256], ['Incendiary 5.56 Rifle Ammo', 256], ['Pistol Bullet', 256],
-            ['Metal Facemask', 1], ['Metal Chest Plate', 1], ['Hoodie', 1], ['Large Medkit', 5]
-          ] },
-          { name: 'Набор «Ресурсы»', every: 'каждые 24 ч', items: [
-            ['Wood', 40000], ['Metal Fragments', 15000], ['High Quality Metal', 700], ['Sulfur', 15000],
-            ['Charcoal', 7500], ['Cloth', 2500], ['Leather', 2500], ['Scrap', 1000], ['Gun Powder', 3000]
-          ] },
-          { name: 'Набор «Взрывчатка»', every: 'каждые 24 ч', items: [
-            ['Timed Explosive Charge', 12], ['Rocket', 8], ['Rocket Launcher', 1], ['Explosive 5.56 Rifle Ammo', 360], ['Beancan Grenade', 16]
-          ] }
-        ]
-      }
-    },
+    // окно услуги при клике: плюшки справа от арта и наборы сеткой.
+    // Главный способ — поле «Описание» товара в админке, клиент правит его сам (формат в docs/perks-howto.md):
+    //   Название плюшки | подпись мелким | значение      (подпись можно пропустить: Название | значение)
+    //   # Название набора | каждые 12 ч
+    //   Assault Rifle x1                                  (английское название, как у товаров магазина, или id предмета Rust)
+    // Запасной способ — здесь, ключ = название товара: { perks: [[имя, подпись, значение]], kits: [{ name, every, items: [[предмет, кол-во]] }] }
+    perks: {},
+
+    // кнопка «Подключить уведомления о рейдах» рядом с «Скопировать IP».
+    // url пустой = кнопка видна, по клику пишет, что скоро появится. Когда будет бот — вставить ссылку на него
+    raid: { label: 'Уведомления о рейдах', url: '', soon: 'Уведомления о рейдах скоро появятся' },
 
     // категории, которые не показываем во вкладках (имя как в админке). Удалить их совсем можно в админке → Категории
     hiddenCategories: ['Праздники', 'Фермерство', 'Машины', 'DLC'],
@@ -143,11 +120,18 @@
       return '<div class="hr-step"><b>' + b[1] + '</b><span>' + b[0] + '</span></div>';
     }).join('');
     var plate = el('<div class="hr-plate">' +
-      '<div class="hr-plate__addr"><span class="hr-label">Адрес сервера</span>' +
-        '<button type="button" class="hr-plate__ip" aria-label="Скопировать адрес сервера ' + HR.connect + '">' + HR.connect + icon('copy') + '</button></div>' +
+      '<div class="hr-plate__addr"><span class="hr-label">Адрес сервера: <span class="hr-plate__addrtext">' + HR.connect + '</span></span>' +
+        '<div class="hr-plate__btns">' +
+          '<button type="button" class="hr-plate__ip" aria-label="Скопировать адрес сервера ' + HR.connect + '">' + icon('copy') + 'Скопировать IP</button>' +
+          (HR.raid && HR.raid.label ? (HR.raid.url
+            ? '<a class="hr-plate__raid" href="' + HR.raid.url + '" target="_blank" rel="noopener">' + icon('bell') + HR.raid.label + '</a>'
+            : '<button type="button" class="hr-plate__raid">' + icon('bell') + HR.raid.label + '</button>') : '') +
+        '</div></div>' +
       (HR.bonuses.length ? '<div class="hr-plate__bonus"><span class="hr-label">Бонус к пополнению</span><div class="hr-steps">' + steps + '</div></div>' : '') +
     '</div>');
     plate.querySelector('.hr-plate__ip').addEventListener('click', copyConnect);
+    var raid = plate.querySelector('button.hr-plate__raid');
+    if (raid) raid.addEventListener('click', function () { toast(HR.raid.soon); });
     box.appendChild(plate);
     embers(box);
     watchScroll(box);
@@ -426,7 +410,7 @@
       d.products.forEach(function (p) {
         byProduct[p.id] = p.categoryId;
         var base = +p.price || 0, disc = +p.discount || 0;
-        prod[p.id] = { cat: p.categoryId, name: String(p.name || ''), price: +(base - base / 100 * disc).toFixed(2), sale: disc > 0, amount: +p.amount || 1, all: p.shownInAll !== false, img: p.img || '' };
+        prod[p.id] = { cat: p.categoryId, name: String(p.name || ''), price: +(base - base / 100 * disc).toFixed(2), sale: disc > 0, amount: +p.amount || 1, all: p.shownInAll !== false, img: p.img || '', about: p.about || '' };
         counts[p.categoryId] = (counts[p.categoryId] || 0) + 1;
         if (p.shownInAll !== false) all++;
       });
@@ -1120,10 +1104,40 @@
     }
     return CAT.imgByName[String(spec).trim().toLowerCase()] || '';
   }
+  // описание товара из админки → { perks, kits }. Строки: «Имя | подпись | значение», «# Набор | каждые 12 ч», «Предмет x256»
+  function parseAbout(html) {
+    if (!html || !/[|#]/.test(html)) return null;
+    var d = document.createElement('div');
+    d.innerHTML = String(html).replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h\d)>/gi, '\n');
+    var perks = [], kits = [], kit = null;
+    d.textContent.split('\n').forEach(function (raw) {
+      var l = raw.replace(/ /g, ' ').trim();
+      if (!l) return;
+      if (l.charAt(0) === '#') {
+        var h = l.replace(/^#+\s*/, '').split('|');
+        kit = { name: h[0].trim(), every: (h[1] || '').trim(), items: [] };
+        kits.push(kit);
+        return;
+      }
+      if (kit) {
+        var m = l.replace(/\s*шт\.?$/i, '').match(/^(.+?)\s*(?:\||[x×х*])\s*(\d[\d\s]*)$/i) || l.match(/^(.+?)\s+(\d+)$/);
+        if (m) kit.items.push([m[1].trim(), +m[2].replace(/\s/g, '')]); else kit.items.push([l, 1]);
+        return;
+      }
+      if (l.indexOf('|') >= 0) {
+        var c = l.split('|').map(function (x) { return x.trim(); });
+        perks.push(c.length >= 3 ? [c[0], c[1], c.slice(2).join(' | ')] : [c[0], '', c[1]]);
+      }
+    });
+    return perks.length || kits.length ? { perks: perks, kits: kits } : null;
+  }
   function perksModal() {
     var m = document.querySelector('[data-modalproductid]');
     if (!m || !CAT) return;
-    var id = m.getAttribute('data-modalproductid'), p = CAT.prod[id], cfg = p && HR.perks[p.name];
+    var id = m.getAttribute('data-modalproductid'), p = CAT.prod[id];
+    var fromAbout = p ? parseAbout(p.about) : null;
+    var cfg = fromAbout || (p && HR.perks[p.name]);
+    m.classList.toggle('hr-modal-about', !!fromAbout);
     var old = m.querySelectorAll('.hr-perks, .hr-kits');
     if (old.length && m.getAttribute('data-hr-perks') === id) return;
     old.forEach(function (n) { n.remove(); });

@@ -166,11 +166,15 @@ body {
 }
 .hr-label { font: 500 12px/1 var(--ui); color: var(--stone-mute); }
 .hr-plate__ip {
-  display: inline-flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; cursor: pointer;
-  font: 700 20px/1 var(--ui); color: var(--stone); font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; align-self: flex-start; gap: 10px;
+  padding: 14px 22px; border: 0; cursor: pointer; clip-path: var(--chip);
+  font: 700 15px/1 var(--ui); color: #fff; background: var(--ember-fill);
+  transition: background .2s, transform .15s var(--ease);
 }
-.hr-plate__ip .hr-i { width: 18px; height: 18px; color: var(--stone-mute); transition: color .2s; }
-@media (hover: hover) { .hr-plate__ip:hover .hr-i { color: var(--ember); } }
+.hr-plate__ip .hr-i { width: 18px; height: 18px; color: #fff; }
+.hr-plate__ip:active { transform: scale(.97); }
+@media (hover: hover) { .hr-plate__ip:hover { background: #e52a12; } }
+.hr-plate__addrtext { font: 500 13px/1 var(--ui); color: var(--stone-mute); font-variant-numeric: tabular-nums; }
 .hr-plate__ip:focus-visible { outline-offset: 4px; }
 .hr-plate__bonus { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 22px 28px; }
 .hr-steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
@@ -880,7 +884,6 @@ body {
   .container.bannerContainer { --hr-head: 61px; }
   .hr-plate { width: calc(100% - 32px); margin-top: -16px; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
   .hr-plate__addr, .hr-plate__bonus { padding: 18px 16px; }
-  .hr-plate__ip { font-size: 18px; }
   .hr-step { flex-direction: column; align-items: flex-start; gap: 6px; padding-right: 10px; min-width: 0; }
   .hr-step + .hr-step { padding-left: 14px; }
   .hr-steps .hr-step:nth-child(odd) { padding-left: 0; border-left: 0; }
@@ -939,7 +942,7 @@ body {
 
 /* самые узкие телефоны: адрес сервера целиком вместе со значком */
 @media (max-width: 359px) {
-  .hr-plate__ip { font-size: 16px; gap: 8px; }
+  .hr-plate__ip { padding: 13px 18px; }
 }
 
 /* ---------- вкладки «Статистика» и «Баны» (рисует custom.js на главной по /#stats и /#bans) ---------- */
@@ -1089,4 +1092,22 @@ div.hr-social__link { cursor: default; }
   .hr-modal-perks.hr-modal-portrait .productModalImg { width: calc(100% + 32px); height: 220px; aspect-ratio: auto; margin: 4px -16px 16px; }
   .hr-perks { margin: 0 0 18px; }
   .hr-kit__grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+}
+
+/* плюшки взяты из описания товара: исходный текст описания не показываем */
+.hr-modal-about .productModalDescription { display: none !important; }
+
+/* кнопки под адресом сервера: скопировать IP и уведомления о рейдах */
+.hr-i--bell { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/bell-ringing.svg"); }
+.hr-plate__btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.hr-plate__raid {
+  display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px;
+  border: 1px solid var(--line-2); background: var(--obs); cursor: pointer; text-decoration: none;
+  font: 700 15px/1 var(--ui); color: var(--stone); transition: border-color .2s, color .2s;
+}
+.hr-plate__raid .hr-i { width: 18px; height: 18px; color: var(--ember); }
+.hr-plate__raid:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+@media (hover: hover) { .hr-plate__raid:hover { border-color: var(--stone-dim); } }
+@media (max-width: 600px) {
+  .hr-plate__ip, .hr-plate__raid { flex: 1 1 auto; justify-content: center; }
 }
