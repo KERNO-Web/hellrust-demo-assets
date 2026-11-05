@@ -174,7 +174,6 @@ body {
 .hr-plate__ip .hr-i { width: 18px; height: 18px; color: #fff; }
 .hr-plate__ip:active { transform: scale(.97); }
 @media (hover: hover) { .hr-plate__ip:hover { background: #e52a12; } }
-.hr-plate__addrtext { font: 500 13px/1 var(--ui); color: var(--stone-mute); font-variant-numeric: tabular-nums; }
 .hr-plate__ip:focus-visible { outline-offset: 4px; }
 .hr-plate__bonus { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 22px 28px; }
 .hr-steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
@@ -318,6 +317,7 @@ body {
 .hr-promo-wrap { order: 1; }
 .Widgets-module__wrapper > [data-widgettype="monitoring"] { order: 2; }
 .hr-wipe-wrap { order: 3; }
+.hr-raid-wrap { order: 4; }
 
 /* промокод (добавляет custom.js): каменная плита со сколом, код раскалён, по клику копируется */
 .hr-promo {
@@ -1097,17 +1097,26 @@ div.hr-social__link { cursor: default; }
 /* плюшки взяты из описания товара: исходный текст описания не показываем */
 .hr-modal-about .productModalDescription { display: none !important; }
 
-/* кнопки под адресом сервера: скопировать IP и уведомления о рейдах */
+
+/* кнопка IP в баннере: «Скопировать IP» → «Скопировано» → адрес. Ширина постоянная, текст сменяется снизу вверх */
 .hr-i--bell { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/bell-ringing.svg"); }
-.hr-plate__btns { display: flex; flex-wrap: wrap; gap: 10px; }
-.hr-plate__raid {
-  display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px;
-  border: 1px solid var(--line-2); background: var(--obs); cursor: pointer; text-decoration: none;
-  font: 700 15px/1 var(--ui); color: var(--stone); transition: border-color .2s, color .2s;
+.hr-i--check { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/check.svg"); }
+.hr-plate__ip { min-width: 248px; justify-content: center; overflow: hidden; }
+.hr-plate__face { display: inline-flex; align-items: center; gap: 10px; }
+.hr-plate__face .hr-i { width: 18px; height: 18px; color: #fff; }
+.hr-plate__face.is-in { animation: hr-face-in .32s var(--ease) both; }
+@keyframes hr-face-in { from { opacity: 0; transform: translateY(60%); } to { opacity: 1; transform: none; } }
+.hr-plate__ip[data-state="ip"] .hr-plate__txt { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+@media (prefers-reduced-motion: reduce) { .hr-plate__face.is-in { animation: none; } }
+@media (max-width: 600px) { .hr-plate__ip { width: 100%; min-width: 0; } }
+
+/* блок «Рейды» в левой колонке */
+.hr-raid__text { margin: 0 0 12px; font: 500 13px/1.4 var(--ui); color: var(--stone-dim); }
+.hr-raid__btn {
+  display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; padding: 12px 12px; box-sizing: border-box;
+  border: 1px solid var(--line-2); background: var(--obs); cursor: pointer; text-decoration: none; white-space: nowrap;
+  font: 700 14px/1 var(--ui); color: var(--stone); transition: border-color .2s;
 }
-.hr-plate__raid .hr-i { width: 18px; height: 18px; color: var(--ember); }
-.hr-plate__raid:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
-@media (hover: hover) { .hr-plate__raid:hover { border-color: var(--stone-dim); } }
-@media (max-width: 600px) {
-  .hr-plate__ip, .hr-plate__raid { flex: 1 1 auto; justify-content: center; }
-}
+.hr-raid__btn .hr-i { width: 18px; height: 18px; color: var(--ember); }
+.hr-raid__btn:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+@media (hover: hover) { .hr-raid__btn:hover { border-color: var(--stone-dim); } }

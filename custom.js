@@ -33,9 +33,9 @@
     // Запасной способ — здесь, ключ = название товара: { perks: [[имя, подпись, значение]], kits: [{ name, every, items: [[предмет, кол-во]] }] }
     perks: {},
 
-    // кнопка «Подключить уведомления о рейдах» рядом с «Скопировать IP».
+    // блок «Рейды» в левой колонке с кнопкой на бота уведомлений.
     // url пустой = кнопка видна, по клику пишет, что скоро появится. Когда будет бот — вставить ссылку на него
-    raid: { label: 'Уведомления о рейдах', url: '', soon: 'Уведомления о рейдах скоро появятся' },
+    raid: { label: 'Подключить уведомления', text: 'Напишем, когда твою базу начнут рейдить.', url: '', soon: 'Уведомления о рейдах скоро появятся' },
 
     // категории, которые не показываем во вкладках (имя как в админке). Удалить их совсем можно в админке → Категории
     hiddenCategories: ['Праздники', 'Фермерство', 'Машины', 'DLC'],
@@ -85,6 +85,43 @@
     else fail();
   }
 
+  // кнопка в баннере: «Скопировать IP» → «Скопировано» → сам адрес (до перезагрузки). Нажатие на адрес снова копирует
+  function plateCopy(plate) {
+    var btn = plate.querySelector('.hr-plate__ip'), face = btn.querySelector('.hr-plate__face'), live = plate.querySelector('.hr-plate__addr .hr-sr');
+    var t = 0;
+    function show(state, iconName, text) {
+      btn.setAttribute('data-state', state);
+      face.innerHTML = icon(iconName) + '<span class="hr-plate__txt">' + esc(text) + '</span>';
+      face.classList.remove('is-in'); void face.offsetWidth; face.classList.add('is-in');
+    }
+    btn.addEventListener('click', function () {
+      var cmd = 'client.connect ' + HR.connect;
+      var ok = function () {
+        clearTimeout(t);
+        show('copied', 'check', 'Скопировано');
+        live.textContent = 'Скопировано. Открой консоль в игре на F1 и вставь';
+        t = setTimeout(function () { show('ip', 'copy', HR.connect); btn.setAttribute('aria-label', 'Скопировать адрес сервера ' + HR.connect); }, 1200);
+      };
+      var fail = function () { clearTimeout(t); show('ip', 'copy', HR.connect); toast('Не удалось скопировать, адрес: ' + HR.connect); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(cmd).then(ok, fail);
+      else fail();
+    });
+  }
+
+  // уведомления о рейдах: отдельный блок в левой колонке. Пока нет бота (HR.raid.url пустой) кнопка пишет «скоро»
+  function raidWidget() {
+    var aside = document.querySelector('.Widgets-module__wrapper');
+    if (!aside || !HR.raid || !HR.raid.label || document.querySelector('.hr-raid-wrap')) return;
+    var b = HR.raid.url
+      ? '<a class="hr-raid__btn" href="' + esc(HR.raid.url) + '" target="_blank" rel="noopener">' + icon('bell') + esc(HR.raid.label) + '</a>'
+      : '<button type="button" class="hr-raid__btn">' + icon('bell') + esc(HR.raid.label) + '</button>';
+    var w = el('<section class="Widgets-module__widgetWrapper hr-raid-wrap"><h2 class="boxHeader">Рейды</h2>' +
+      '<p class="hr-raid__text">' + esc(HR.raid.text || '') + '</p>' + b + '</section>');
+    var btn = w.querySelector('button.hr-raid__btn');
+    if (btn) btn.addEventListener('click', function () { toast(HR.raid.soon); });
+    aside.appendChild(w);
+  }
+
   function setVars() {
     document.documentElement.style.setProperty('--hr-logo', 'url("' + HR.logo + '")');
     document.documentElement.style.setProperty('--hr-bg', 'url("' + HR.bannerMobile + '")');
@@ -120,18 +157,13 @@
       return '<div class="hr-step"><b>' + b[1] + '</b><span>' + b[0] + '</span></div>';
     }).join('');
     var plate = el('<div class="hr-plate">' +
-      '<div class="hr-plate__addr"><span class="hr-label">Адрес сервера: <span class="hr-plate__addrtext">' + HR.connect + '</span></span>' +
-        '<div class="hr-plate__btns">' +
-          '<button type="button" class="hr-plate__ip" aria-label="Скопировать адрес сервера ' + HR.connect + '">' + icon('copy') + 'Скопировать IP</button>' +
-          (HR.raid && HR.raid.label ? (HR.raid.url
-            ? '<a class="hr-plate__raid" href="' + HR.raid.url + '" target="_blank" rel="noopener">' + icon('bell') + HR.raid.label + '</a>'
-            : '<button type="button" class="hr-plate__raid">' + icon('bell') + HR.raid.label + '</button>') : '') +
-        '</div></div>' +
+      '<div class="hr-plate__addr"><span class="hr-label">Адрес сервера</span>' +
+        '<button type="button" class="hr-plate__ip" data-state="idle" aria-label="Скопировать адрес сервера">' +
+          '<span class="hr-plate__face">' + icon('copy') + '<span class="hr-plate__txt">Скопировать IP</span></span></button>' +
+        '<span class="hr-sr" aria-live="polite"></span></div>' +
       (HR.bonuses.length ? '<div class="hr-plate__bonus"><span class="hr-label">Бонус к пополнению</span><div class="hr-steps">' + steps + '</div></div>' : '') +
     '</div>');
-    plate.querySelector('.hr-plate__ip').addEventListener('click', copyConnect);
-    var raid = plate.querySelector('button.hr-plate__raid');
-    if (raid) raid.addEventListener('click', function () { toast(HR.raid.soon); });
+    plateCopy(plate);
     box.appendChild(plate);
     embers(box);
     watchScroll(box);
@@ -267,7 +299,7 @@
     document.documentElement.classList.toggle('hr-drawer-on', mobile);
     var d = body.querySelector('.hr-drawer');
     if (!d) { d = el('<div class="hr-drawer"></div>'); body.appendChild(d); }
-    var parts = ['.hr-promo-wrap', '.hr-mon-wrap', '.hr-wipe-wrap', '.hr-social-wrap'];
+    var parts = ['.hr-promo-wrap', '.hr-mon-wrap', '.hr-wipe-wrap', '.hr-raid-wrap', '.hr-social-wrap'];
     if (!d.querySelector('.hr-mon-wrap')) d.appendChild(el('<section class="hr-mon-wrap" hidden><h2 class="boxHeader">Сервер</h2><div class="hr-mon"></div></section>'));
     parts.forEach(function (sel) {
       var n = document.querySelector(sel);
@@ -1176,6 +1208,7 @@
     grain();
     promo();
     wipes();
+    raidWidget();
     social();
     drawer();
     toastRegion();
