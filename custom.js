@@ -33,9 +33,9 @@
     // Запасной способ — здесь, ключ = название товара: { perks: [[имя, подпись, значение]], kits: [{ name, every, items: [[предмет, кол-во]] }] }
     perks: {},
 
-    // блок «Рейды» в левой колонке с кнопкой на бота уведомлений.
+    // кнопка уведомлений о рейдах в плашке под баннером (IP копируется кнопкой в шапке).
     // url пустой = кнопка видна, по клику пишет, что скоро появится. Когда будет бот — вставить ссылку на него
-    raid: { label: 'Подключить уведомления', text: 'Напишем, когда твою базу рейдят.', url: '', soon: 'Уведомления о рейдах скоро появятся' },
+    raid: { title: 'Уведомления о рейдах', label: 'Подключить уведомления', url: '', soon: 'Уведомления о рейдах скоро появятся' },
 
     // категории, которые не показываем во вкладках (имя как в админке). Удалить их совсем можно в админке → Категории
     hiddenCategories: ['Праздники', 'Фермерство', 'Машины', 'DLC'],
@@ -77,49 +77,27 @@
     return '<i class="hr-i hr-i--' + name + '" aria-hidden="true"></i>';
   }
 
-  function copyConnect() {
-    var cmd = 'client.connect ' + HR.connect;
-    var ok = function () { toast('Скопировано. Открой консоль в игре на F1 и вставь'); };
-    var fail = function () { toast('Не удалось скопировать, адрес: ' + HR.connect); };
-    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(cmd).then(ok, fail);
-    else fail();
-  }
-
-  // кнопка в баннере: «Скопировать IP» → «Скопировано» → сам адрес (до перезагрузки). Нажатие на адрес снова копирует
-  function plateCopy(plate) {
-    var btn = plate.querySelector('.hr-plate__ip'), face = btn.querySelector('.hr-plate__face'), live = plate.querySelector('.hr-plate__addr .hr-sr');
-    var t = 0;
+  // копирование IP с анимацией: «Скопировать IP» → «Скопировано» → сам адрес (до перезагрузки). Нажатие на адрес снова копирует
+  function copyFlow(btn) {
+    var face = btn.querySelector('.hr-copy__face'), t = 0;
+    var live = document.querySelector('.hr-copy-live');
+    if (!live) { live = el('<span class="hr-sr hr-copy-live" aria-live="polite"></span>'); document.body.appendChild(live); }
     function show(state, iconName, text) {
       btn.setAttribute('data-state', state);
-      face.innerHTML = icon(iconName) + '<span class="hr-plate__txt">' + esc(text) + '</span>';
+      face.innerHTML = (iconName ? icon(iconName) : '') + '<span class="hr-copy__txt">' + esc(text) + '</span>';
       face.classList.remove('is-in'); void face.offsetWidth; face.classList.add('is-in');
     }
     btn.addEventListener('click', function () {
-      var cmd = 'client.connect ' + HR.connect;
       var ok = function () {
         clearTimeout(t);
         show('copied', 'check', 'Скопировано');
         live.textContent = 'Скопировано. Открой консоль в игре на F1 и вставь';
-        t = setTimeout(function () { show('ip', 'copy', HR.connect); btn.setAttribute('aria-label', 'Скопировать адрес сервера ' + HR.connect); }, 1200);
+        t = setTimeout(function () { show('ip', '', HR.connect); btn.setAttribute('aria-label', 'Скопировать адрес сервера ' + HR.connect); }, 1200);
       };
-      var fail = function () { clearTimeout(t); show('ip', 'copy', HR.connect); toast('Не удалось скопировать, адрес: ' + HR.connect); };
-      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(cmd).then(ok, fail);
+      var fail = function () { clearTimeout(t); show('ip', '', HR.connect); toast('Не удалось скопировать, адрес: ' + HR.connect); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText('client.connect ' + HR.connect).then(ok, fail);
       else fail();
     });
-  }
-
-  // уведомления о рейдах: отдельный блок в левой колонке. Пока нет бота (HR.raid.url пустой) кнопка пишет «скоро»
-  function raidWidget() {
-    var aside = document.querySelector('.Widgets-module__wrapper');
-    if (!aside || !HR.raid || !HR.raid.label || document.querySelector('.hr-raid-wrap')) return;
-    var b = HR.raid.url
-      ? '<a class="hr-raid__btn" href="' + esc(HR.raid.url) + '" target="_blank" rel="noopener">' + icon('bell') + esc(HR.raid.label) + '</a>'
-      : '<button type="button" class="hr-raid__btn">' + icon('bell') + esc(HR.raid.label) + '</button>';
-    var w = el('<section class="Widgets-module__widgetWrapper hr-raid-wrap"><h2 class="boxHeader">Рейды</h2>' +
-      '<p class="hr-raid__text">' + esc(HR.raid.text || '') + '</p>' + b + '</section>');
-    var btn = w.querySelector('button.hr-raid__btn');
-    if (btn) btn.addEventListener('click', function () { toast(HR.raid.soon); });
-    aside.appendChild(w);
   }
 
   function setVars() {
@@ -157,13 +135,15 @@
       return '<div class="hr-step"><b>' + b[1] + '</b><span>' + b[0] + '</span></div>';
     }).join('');
     var plate = el('<div class="hr-plate">' +
-      '<div class="hr-plate__addr"><span class="hr-label">Адрес сервера</span>' +
-        '<button type="button" class="hr-plate__ip" data-state="idle" aria-label="Скопировать адрес сервера">' +
-          '<span class="hr-plate__face">' + icon('copy') + '<span class="hr-plate__txt">Скопировать IP</span></span></button>' +
-        '<span class="hr-sr" aria-live="polite"></span></div>' +
+      (HR.raid && HR.raid.label ? '<div class="hr-plate__addr"><span class="hr-label">' + esc(HR.raid.title || 'Уведомления о рейдах') + '</span>' +
+        (HR.raid.url
+          ? '<a class="hr-plate__ip" href="' + esc(HR.raid.url) + '" target="_blank" rel="noopener">' + icon('bell') + esc(HR.raid.label) + '</a>'
+          : '<button type="button" class="hr-plate__ip">' + icon('bell') + esc(HR.raid.label) + '</button>') +
+        '</div>' : '') +
       (HR.bonuses.length ? '<div class="hr-plate__bonus"><span class="hr-label">Бонус к пополнению</span><div class="hr-steps">' + steps + '</div></div>' : '') +
     '</div>');
-    plateCopy(plate);
+    var rb = plate.querySelector('button.hr-plate__ip');
+    if (rb) rb.addEventListener('click', function () { toast(HR.raid.soon); });
     box.appendChild(plate);
     embers(box);
     watchScroll(box);
@@ -245,8 +225,8 @@
   function connectBtn() {
     var menu = document.querySelector('.PlayerMenu-module__wrapper');
     if (!menu || menu.querySelector('.hr-connect')) return;
-    var btn = el('<button type="button" class="hr-connect" aria-label="Скопировать адрес сервера ' + HR.connect + '">Скопировать IP</button>');
-    btn.addEventListener('click', copyConnect);
+    var btn = el('<button type="button" class="hr-connect" data-state="idle" aria-label="Скопировать адрес сервера"><span class="hr-copy__face"><span class="hr-copy__txt">Скопировать IP</span></span></button>');
+    copyFlow(btn);
     menu.insertBefore(btn, menu.firstChild);
   }
 
@@ -299,7 +279,7 @@
     document.documentElement.classList.toggle('hr-drawer-on', mobile);
     var d = body.querySelector('.hr-drawer');
     if (!d) { d = el('<div class="hr-drawer"></div>'); body.appendChild(d); }
-    var parts = ['.hr-promo-wrap', '.hr-mon-wrap', '.hr-wipe-wrap', '.hr-raid-wrap', '.hr-social-wrap'];
+    var parts = ['.hr-promo-wrap', '.hr-mon-wrap', '.hr-wipe-wrap', '.hr-social-wrap'];
     if (!d.querySelector('.hr-mon-wrap')) d.appendChild(el('<section class="hr-mon-wrap" hidden><h2 class="boxHeader">Сервер</h2><div class="hr-mon"></div></section>'));
     parts.forEach(function (sel) {
       var n = document.querySelector(sel);
@@ -1208,7 +1188,6 @@
     grain();
     promo();
     wipes();
-    raidWidget();
     social();
     drawer();
     toastRegion();

@@ -317,7 +317,6 @@ body {
 .hr-promo-wrap { order: 1; }
 .Widgets-module__wrapper > [data-widgettype="monitoring"] { order: 2; }
 .hr-wipe-wrap { order: 3; }
-.hr-raid-wrap { order: 4; }
 
 /* промокод (добавляет custom.js): каменная плита со сколом, код раскалён, по клику копируется */
 .hr-promo {
@@ -1098,25 +1097,23 @@ div.hr-social__link { cursor: default; }
 .hr-modal-about .productModalDescription { display: none !important; }
 
 
-/* кнопка IP в баннере: «Скопировать IP» → «Скопировано» → адрес. Ширина постоянная, текст сменяется снизу вверх */
+/* «Скопировать IP» в шапке: «Скопировано» → адрес. Текст сменяется снизу вверх */
 .hr-i--bell { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/bell-ringing.svg"); }
 .hr-i--check { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/check.svg"); }
-.hr-plate__ip { min-width: 248px; justify-content: center; overflow: hidden; }
-.hr-plate__face { display: inline-flex; align-items: center; gap: 10px; }
-.hr-plate__face .hr-i { width: 18px; height: 18px; color: #fff; }
-.hr-plate__face.is-in { animation: hr-face-in .32s var(--ease) both; }
+.hr-connect { overflow: hidden; justify-content: center; }
+.hr-copy__face { display: inline-flex; align-items: center; gap: 8px; }
+.hr-copy__face .hr-i { width: 16px; height: 16px; color: #fff; }
+.hr-copy__face.is-in { animation: hr-face-in .32s var(--ease) both; }
 @keyframes hr-face-in { from { opacity: 0; transform: translateY(60%); } to { opacity: 1; transform: none; } }
-.hr-plate__ip[data-state="ip"] .hr-plate__txt { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-@media (prefers-reduced-motion: reduce) { .hr-plate__face.is-in { animation: none; } }
-@media (max-width: 600px) { .hr-plate__ip { width: 100%; min-width: 0; } }
+.hr-connect[data-state="ip"] .hr-copy__txt { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+@media (prefers-reduced-motion: reduce) { .hr-copy__face.is-in { animation: none; } }
 
-/* блок «Рейды» в левой колонке */
-.hr-raid__text { margin: 0 0 12px; font: 500 13px/1.4 var(--ui); color: var(--stone-dim); text-wrap: balance; }
-.hr-raid__btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 44px; padding: 0 14px; box-sizing: border-box;
-  border: 1px solid var(--line-2); background: var(--obs); cursor: pointer; text-decoration: none; white-space: nowrap;
-  font: 600 13px/1 var(--ui); color: var(--stone); transition: border-color .2s;
+/* кнопка уведомлений о рейдах в плашке под баннером */
+.hr-plate__ip { justify-content: center; text-decoration: none; }
+@media (max-width: 600px) { .hr-plate__ip { width: 100%; } }
+/* телефон: адрес в шапке длиннее надписи, ужимаем его, чтобы шапка не переносилась на вторую строку */
+.hr-connect { white-space: nowrap; }
+@media (max-width: 600px) {
+  .hr-connect[data-state="ip"] { padding-left: 10px; padding-right: 10px; }
+  .hr-connect[data-state="ip"] .hr-copy__txt { font-size: 12px; letter-spacing: 0; }
 }
-.hr-raid__btn .hr-i { flex: none; width: 16px; height: 16px; color: var(--ember); }
-.hr-raid__btn:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
-@media (hover: hover) { .hr-raid__btn:hover { border-color: var(--stone-dim); } }
