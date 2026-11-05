@@ -43,7 +43,7 @@
 
     // порядок = порядок на сайте. Пустой url = строка видна, но не кликается (ждём ссылку от клиента)
     social: [
-      { name: 'Discord', hint: 'Общение и поддержка', url: '', icon: 'ds' },
+      { name: 'Discord', hint: 'Чат и поддержка', url: '', icon: 'ds' },
       { name: 'ВКонтакте', hint: 'Розыгрыши и новости', url: 'https://vk.com/hellrustserver', icon: 'vk' },
       { name: 'Telegram', hint: 'Вайпы и обновления', url: 'https://t.me/hellrustserver', icon: 'tg' }
     ]
