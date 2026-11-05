@@ -420,13 +420,13 @@ body {
 /* ---------- витрина ---------- */
 .Shop-module__wrapper .Products-module__wrapper {
   grid-column: 2; grid-row: 4 / 6; margin: 0; width: auto;
-  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px;
+  display: grid; grid-template-columns: repeat(60, minmax(0, 1fr)); gap: 2px;
   background: none; border: 0;
 }
-/* 12 колонок: обычная плитка 2 (6 в ряд), привилегия 3 (4 в ряд), набор и кейс 4 (3 в ряд) */
-.Products-module__wrapper > .Product-module__wrapper { grid-column: span 2; }
-.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 3; }
-.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 4; }
+/* 60 колонок: обычная плитка 10 (6 в ряд), услуга-портрет 12 (5 в ряд), набор и кейс 20 (3 в ряд) */
+.Products-module__wrapper > .Product-module__wrapper { grid-column: span 10; }
+.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 12; }
+.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 20; }
 
 /* пустая выдача: шаблон кладёт «Данных нет» рядом с сеткой, ставим его в зону витрины.
    Текст подменяет custom.js: первая строка заголовок, вторая что делать */
@@ -569,7 +569,7 @@ body {
 .Product-module__wrapper[data-hr-feat] .Product-module__oldPrice { font-size: 14px; }
 /* скидка на витрине: залитая метка со сколом */
 .Product-module__wrapper[data-hr-feat] .Product-module__discount {
-  top: 14px; left: 14px; padding: 6px 8px 5px; background: var(--ember-fill); color: #fff; font-size: 14px;
+  top: 14px; left: auto; right: 14px; padding: 6px 8px 5px; background: var(--ember-fill); color: #fff; font-size: 14px;
   clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px)); z-index: 3;
 }
 .Product-module__wrapper[data-hr-feat] .Product-module__count { top: 16px; right: 18px; font-size: 13px; z-index: 3; }
@@ -590,7 +590,9 @@ body {
 }
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name,
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__price { position: relative; z-index: 2; }
-.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 26px; line-height: 1.05; }
+/* пять в ряд и длинные названия услуг: размер от ширины карточки, до трёх строк, перенос по словам */
+.Product-module__wrapper[data-hr-feat="portrait"] { container-type: inline-size; padding: 16px; }
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: clamp(14px, 11cqi, 24px); line-height: 1.08; -webkit-line-clamp: 3; hyphens: auto; }
 .Product-module__wrapper[data-hr-feat="portrait"]::after { z-index: 3; }
 
 /* привилегия: живой жар. Тлеющие искры поднимаются из-под имени и гаснут, не доходя до лица.
@@ -820,8 +822,7 @@ body {
 
 /* ---------- узкий десктоп: обычных 4 в ряд ---------- */
 @media (max-width: 1199px) {
-  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 3; }
-  .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 22px; }
+  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 15; }
   .Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 112px; }
 }
 
@@ -891,9 +892,9 @@ body {
   .Search-module__wrapper { height: 48px; }
   .Categories-module__categories { margin: 0 -16px; padding: 4px 16px 0; gap: 0 20px; }
   .Shop-module__wrapper .Products-module__wrapper { margin: 8px -16px 0; }
-  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 4; }
-  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 6; }
-  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 12; }
+  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 20; }
+  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 30; }
+  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 60; }
   .Shop-module__wrapper .errorMessage { font-size: 14px; }
   .Shop-module__wrapper .errorMessage::first-line { font-size: 20px; }
   /* заголовок группы: число и цены своей строкой */
@@ -913,9 +914,8 @@ body {
 
   /* витрина на телефоне: привилегии по две, наборы и кейсы строкой, картинка слева */
   .Product-module__wrapper[data-hr-feat="portrait"] { padding: 14px; }
-  .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: 20px; }
   .Product-module__wrapper[data-hr-feat] .Product-module__price { font-size: 16px; margin-top: 6px; }
-  .Product-module__wrapper[data-hr-feat] .Product-module__discount { top: 10px; left: 10px; font-size: 12px; padding: 5px 6px 4px; }
+  .Product-module__wrapper[data-hr-feat] .Product-module__discount { top: 10px; left: auto; right: 10px; font-size: 12px; padding: 5px 6px 4px; }
   .Product-module__wrapper[data-hr-feat="item"] {
     grid-template-columns: 84px minmax(0, 1fr); grid-template-areas: "img name" "img price";
     align-content: center; column-gap: 16px; padding: 14px 16px;
@@ -1037,3 +1037,8 @@ body {
   .hr-table--bans .hr-c-at::before { content: "выдан "; }
 }
 div.hr-social__link { cursor: default; }
+
+/* фильтры выключены в HR.filters: остаются поиск и сортировка */
+.hr-tools--sort-only .hr-tools__toggle, .hr-tools--sort-only .hr-filters { display: none !important; }
+/* на витрине скидка справа, звезда избранного остаётся на своём месте слева */
+.Product-module__wrapper[data-hr-feat] .Product-module__favoriteWithDiscount { top: 4px; }

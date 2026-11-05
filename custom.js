@@ -21,9 +21,15 @@
     // витринные категории: стоят первыми в «Все» и показываются крупными карточками.
     // name: имя категории как в админке; look: 'portrait' (картинка на всю карточку) или 'item' (предмет на прозрачном фоне)
     featured: [
-      { name: 'Привилегии', look: 'portrait' }
+      { name: 'Услуги', look: 'portrait' }
       // вид 'item' (предмет на прозрачном фоне) тоже готов: { name: 'Кейсы', look: 'item' }
     ],
+
+    // категории, которые не показываем во вкладках (имя как в админке). Удалить их совсем можно в админке → Категории
+    hiddenCategories: ['Праздники', 'Фермерство', 'Машины', 'DLC'],
+
+    // фильтры цены, «со скидкой» и «поштучно/пачками». false = остаются только поиск и сортировка
+    filters: false,
 
     // стартовый промокод в левой колонке; пустой code = блок не показывается
     promo: { code: 'HELLSTART', text: 'Скидка 10% на товары.', until: 'До\u00a031.12.2026.' },
@@ -43,7 +49,7 @@
 
     // порядок = порядок на сайте. Пустой url = строка видна, но не кликается (ждём ссылку от клиента)
     social: [
-      { name: 'Discord', hint: 'Чат и поддержка', url: '', icon: 'ds' },
+      { name: 'Discord', hint: 'Чат и поддержка', url: 'https://discord.gg/hmFeNxWrG', icon: 'ds' },
       { name: 'ВКонтакте', hint: 'Розыгрыши и новости', url: 'https://vk.com/hellrustserver', icon: 'vk' },
       { name: 'Telegram', hint: 'Вайпы и обновления', url: 'https://t.me/hellrustserver', icon: 'tg' }
     ]
@@ -401,6 +407,11 @@
     }).catch(function () { loadCatalog.busy = false; });
   }
 
+  function isHiddenCat(name) {
+    var n = String(name || '').trim().toLowerCase();
+    return !!n && HR.hiddenCategories.some(function (h) { return h.trim().toLowerCase() === n; });
+  }
+
   // число предметов рядом с каждой категорией
   function catCounts() {
     if (!CAT) return;
@@ -421,6 +432,7 @@
       var v = n == null ? '' : String(n);
       if (b.getAttribute('data-hr-n') !== v) b.setAttribute('data-hr-n', v);
       var id = b.getAttribute('data-categoryid'), f = CAT.feat[id];
+      toggleAttr(b, 'data-hr-off', isHiddenCat(CAT.names[id]));
       var o = id === '0' ? '-100' : f ? String(f.order) : '';
       if (b.style.order !== o) b.style.order = o;
     });
@@ -518,6 +530,8 @@
   // Выбор хранится в localStorage. Узлы React не двигаем: порядок через CSS order, скрытие атрибутом.
   var FKEY = 'hr-filter-1', F = { sort: '', min: '', max: '', sale: false, pack: '' };
   try { var sv = JSON.parse(localStorage.getItem(FKEY)); if (sv) Object.keys(F).forEach(function (k) { if (k in sv) F[k] = sv[k]; }); } catch (e) {}
+  // фильтры выключены: сохранённые раньше значения не должны прятать товары
+  if (!HR.filters) { F.min = ''; F.max = ''; F.sale = false; F.pack = ''; }
   function saveF() { try { localStorage.setItem(FKEY, JSON.stringify(F)); } catch (e) {} }
   function fActive() { return F.min !== '' || F.max !== '' || !!F.sale || F.pack !== ''; }
   function fCount() { return (F.min !== '' || F.max !== '' ? 1 : 0) + (F.sale ? 1 : 0) + (F.pack !== '' ? 1 : 0); }
@@ -553,7 +567,7 @@
     var b = document.querySelector('.hr-tools');
     if (b && b.previousElementSibling === search) return syncTools();
     if (b) { search.parentNode.insertBefore(b, search.nextSibling); return syncTools(); }
-    b = el('<div class="hr-tools" role="group" aria-label="Сортировка и фильтры">' +
+    b = el('<div class="hr-tools' + (HR.filters ? '' : ' hr-tools--sort-only') + '" role="group" aria-label="Сортировка и фильтры">' +
       '<label class="hr-sort"><span class="hr-sr">Сортировка</span><select class="hr-sort__select">' +
         SORTS.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') +
       '</select>' + icon('chev') + '</label>' +
