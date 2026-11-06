@@ -1161,6 +1161,12 @@
     });
     return perks.length || kits.length ? { perks: perks, kits: kits } : null;
   }
+  // значение плюшки; цвет можно дописать в конце кодом: «GOD #3fa9ff» → GOD этим цветом
+  function perkVal(v) {
+    var m = String(v).match(/^(.*?)\s+(#[0-9a-f]{6}|#[0-9a-f]{3})$/i);
+    if (!m) return '<span class="hr-perk__val">' + esc(v) + '</span>';
+    return '<span class="hr-perk__val" style="color:' + m[2] + '">' + esc(m[1]) + '</span>';
+  }
   function perksModal() {
     var m = document.querySelector('[data-modalproductid]');
     if (!m || !CAT) return;
@@ -1180,7 +1186,7 @@
       var list = el('<section class="hr-perks" aria-label="Что даёт"><ul class="hr-perks__list">' + cfg.perks.map(function (r) {
         return '<li class="hr-perk"><span class="hr-perk__text"><span class="hr-perk__name">' + esc(r[0]) + '</span>' +
           (r[1] ? '<span class="hr-perk__note">' + esc(r[1]) + '</span>' : '') + '</span>' +
-          (r[2] ? '<span class="hr-perk__val">' + esc(r[2]) + '</span>' : '') + '</li>';
+          (r[2] ? perkVal(r[2]) : '') + '</li>';
       }).join('') + '</ul></section>');
       if (img && img.nextSibling) body.insertBefore(list, img.nextSibling); else body.insertBefore(list, body.firstChild);
     }
