@@ -1124,3 +1124,6 @@ div.hr-social__link { cursor: default; }
   font: 600 14px/1 var(--ui); color: var(--stone-dim); transition: color .2s;
 }
 @media (hover: hover) { .SupportLink-module__link:hover { color: var(--stone); } }
+
+/* окно пополнения баланса: «Закрыть» и «Пополнить» не впритык */
+.PlayerBalanceModal-module__footer { gap: 12px; }
