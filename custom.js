@@ -429,7 +429,8 @@
       var d = j && j.data;
       if (!d || !d.products) return;
       var names = {}, byProduct = {}, counts = {}, all = 0, prod = {};
-      d.categories.forEach(function (c) { names[c.id] = c.name; counts[c.id] = 0; });
+      var catPos = {};
+      d.categories.forEach(function (c, i) { names[c.id] = c.name; counts[c.id] = 0; catPos[c.id] = i; });
       d.products.forEach(function (p) {
         byProduct[p.id] = p.categoryId;
         var base = +p.price || 0, disc = +p.discount || 0;
@@ -444,7 +445,7 @@
           if (f.name.trim().toLowerCase() === String(c.name).trim().toLowerCase()) feat[c.id] = { look: f.look, order: i - HR.featured.length };
         });
       });
-      CAT = { names: names, byProduct: byProduct, counts: counts, feat: feat, prod: prod };
+      CAT = { names: names, byProduct: byProduct, counts: counts, feat: feat, prod: prod, catPos: catPos };
       apply();
     }).catch(function () { loadCatalog.busy = false; });
   }
@@ -508,8 +509,9 @@
       g.items.push(d);
       if (d.on) { g.n++; shown++; g.min = Math.min(g.min, d.price); g.max = Math.max(g.max, d.price); }
     });
-    // группы: витринные сверху в порядке HR.featured, остальные как пришли
-    list.forEach(function (g, i) { var f = CAT.feat[g.cat]; g.feat = f; g.rank = f ? f.order * 1000 : i + 1; });
+    // группы: витринные сверху в порядке HR.featured, остальные в порядке категорий из админки (как вкладки),
+    // а не по самому маленькому индексу товара внутри группы
+    list.forEach(function (g, i) { var f = CAT.feat[g.cat], pos = CAT.catPos[g.cat]; g.feat = f; g.rank = f ? f.order * 1000 : (pos == null ? 500 + i : pos + 1); });
     list.slice().sort(function (a, b) { return a.rank - b.rank; }).forEach(function (g, k) { g.ord = (k + 1) * 1000; });
     var want = new Map();
     list.forEach(function (g) {
