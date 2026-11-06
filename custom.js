@@ -166,14 +166,26 @@
     var c = document.createElement('canvas');
     c.className = 'hr-embers';
     box.appendChild(c);
-    var ctx = c.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Раньше каждая искра рисовалась с shadowBlur на холсте ×2 — это давало рывки при прокрутке, пока баннер на экране.
+    // Теперь свечение рисуется один раз в маленькие спрайты (по оттенкам), а кадр — это только drawImage. Холст в 1×: искры мягкие, чёткость не нужна.
+    var ctx = c.getContext('2d'), dpr = 1;
     var w = 0, h = 0, parts = [], on = true, last = 0;
+    var SPR = 32, sprites = [8, 15, 22, 30].map(function (hue) {
+      var s = document.createElement('canvas'); s.width = s.height = SPR;
+      var g = s.getContext('2d'), r = SPR / 2, grd = g.createRadialGradient(r, r, 0, r, r, r);
+      grd.addColorStop(0, 'hsla(' + hue + ',100%,72%,1)');
+      grd.addColorStop(.22, 'hsla(' + hue + ',100%,58%,.9)');
+      grd.addColorStop(.5, 'hsla(' + hue + ',100%,50%,.25)');
+      grd.addColorStop(1, 'hsla(' + hue + ',100%,50%,0)');
+      g.fillStyle = grd; g.fillRect(0, 0, SPR, SPR);
+      return s;
+    });
 
     function size() {
       w = c.clientWidth; h = c.clientHeight;
       c.width = w * dpr; c.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var n = Math.round(Math.min(70, w / 22));
+      var n = Math.round(Math.min(60, w / 24));
       parts = [];
       for (var i = 0; i < n; i++) parts.push(spawn(true));
     }
@@ -184,7 +196,7 @@
         r: .8 + Math.random() * 2.2,
         vy: .25 + Math.random() * .9,
         sway: Math.random() * 6.28,
-        hue: 8 + Math.random() * 22,
+        spr: Math.floor(Math.random() * 4),
         life: .35 + Math.random() * .65
       };
     }
@@ -201,13 +213,12 @@
         p.x += Math.sin(p.sway) * .35 * dt;
         var a = Math.max(0, Math.min(1, p.y / h)) * p.life;
         if (p.y < -10) { parts[i] = spawn(false); continue; }
-        ctx.beginPath();
-        ctx.fillStyle = 'hsla(' + p.hue + ',100%,58%,' + a + ')';
-        ctx.shadowColor = 'hsla(' + p.hue + ',100%,50%,' + a + ')';
-        ctx.shadowBlur = 8;
-        ctx.arc(p.x, p.y, p.r, 0, 6.28);
-        ctx.fill();
+        if (a < .02) continue;
+        var d = p.r * 7;
+        ctx.globalAlpha = a;
+        ctx.drawImage(sprites[p.spr], p.x - d / 2, p.y - d / 2, d, d);
       }
+      ctx.globalAlpha = 1;
       requestAnimationFrame(tick);
     }
     size();
