@@ -326,8 +326,10 @@
   function wipeList(now) {
     var W = HR.wipes || {}, out = [];
     if (W.global) {
-      var y = now.getUTCFullYear(), m = now.getUTCMonth();
-      for (var k = 0; k < 3; k++) out.push({ at: firstThursday(y, m + k), kind: 'Глобальный вайп' });
+      // вайп сервера каждую пятницу в 15:00 МСК (12:00 UTC)
+      var f = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0));
+      while (f.getUTCDay() !== 5) f.setUTCDate(f.getUTCDate() + 1);
+      for (var k = 0; k < 3; k++) out.push({ at: new Date(f.getTime() + k * 7 * 864e5), kind: 'Вайп' });
     }
     (W.map || []).forEach(function (s) {
       var a = String(s).match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/);
