@@ -56,7 +56,8 @@
     // bans:  [{ name, steamid, reason, admin, at: '2026-11-03 18:20', until: '2026-12-03 18:20' или '' (навсегда) }], время по Москве
     pages: {
       stats: { title: 'Статистика', url: '' },
-      bans: { title: 'Баны', url: '' }
+      // rustapp: ПУБЛИЧНЫЙ ключ RustApp (панель RustApp → Web API, «публичный ключ»). Приватный сюда НЕ вставлять: его увидит любой посетитель.
+      bans: { title: 'Баны', url: '', rustapp: '' }
     },
 
     // порядок = порядок на сайте. Пустой url = строка видна, но не кликается (ждём ссылку от клиента)
@@ -943,12 +944,32 @@
     });
   }
 
+  // баны из RustApp Web API (court.rustapp.io, ключ x-public-api-key, только чтение), до 20 страниц
+  function rustappBans(key) {
+    var msk = function (ms) { var m = new Date(ms + 3 * 3600e3), t = function (n) { return (n < 10 ? '0' : '') + n; };
+      return m.getUTCFullYear() + '-' + t(m.getUTCMonth() + 1) + '-' + t(m.getUTCDate()) + ' ' + t(m.getUTCHours()) + ':' + t(m.getUTCMinutes()); };
+    var out = [];
+    var page = function (n) {
+      return fetch('https://court.rustapp.io/public/simplified-bans?exclude_stale=false&page=' + n, { headers: { 'x-public-api-key': key } })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+          var res = j.results || [];
+          res.forEach(function (b) {
+            var end = b.unban_time || b.expired_at || 0;
+            out.push({ name: (b.player && b.player.steam_name) || b.steam_id, steamid: b.steam_id, reason: b.reason || '',
+              at: b.created_at ? msk(b.created_at) : '', until: end ? msk(end) : (b.computed_is_active === false ? msk(b.created_at || Date.now()) : '') });
+          });
+          return res.length && res.length >= (j.limit || res.length) && n < 19 ? page(n + 1) : out;
+        });
+    };
+    return page(0);
+  }
+
   function loadPage(k, box) {
     if (PG.data[k] || PG.busy[k]) return;
     var P = HR.pages[k];
-    if (!P.url) { PG.data[k] = { rows: demoData(k), demo: true }; return; }
+    if (!P.url && !P.rustapp) { PG.data[k] = { rows: demoData(k), demo: true }; return; }
     PG.busy[k] = true;
-    fetch(P.url).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+    (P.rustapp ? rustappBans(P.rustapp) : fetch(P.url).then(function (r) { if (!r.ok) throw 0; return r.json(); })).then(function (j) {
       PG.data[k] = { rows: Array.isArray(j) ? j : (j.rows || j.items || []) };
     }).catch(function () { PG.data[k] = { rows: [], error: true }; }).then(function () {
       PG.busy[k] = false;
@@ -1028,7 +1049,8 @@
       var act = rows.filter(function (r) { return r.active; }).length;
       sub.textContent = 'Действуют ' + act + ' из ' + rows.length;
       list = rows.filter(function (r) { return hit(r) && (st.only === 'all' || (st.only === 'active') === r.active); }); total = list.length;
-      html = '<table class="hr-table hr-table--bans"><thead><tr><th scope="col">Игрок</th><th scope="col">Причина</th><th scope="col">Срок</th><th scope="col">Выдан</th><th scope="col">Админ</th></tr></thead><tbody>' +
+      var adm = rows.some(function (r) { return r.admin; });
+      html = '<table class="hr-table hr-table--bans"><thead><tr><th scope="col">Игрок</th><th scope="col">Причина</th><th scope="col">Срок</th><th scope="col">Выдан</th>' + (adm ? '<th scope="col">Админ</th>' : '') + '</tr></thead><tbody>' +
         list.slice(0, st.shown).map(function (r) {
           var term = !r.until ? 'Навсегда' : (r.active ? 'до ' : 'истёк ') + shortDate(r.until);
           return '<tr' + (r.active ? '' : ' class="is-over"') + '>' +
@@ -1036,7 +1058,7 @@
             '<td class="hr-c-reason">' + esc(r.reason) + '</td>' +
             '<td class="hr-c-term' + (r.until ? '' : ' is-perm') + '">' + term + '</td>' +
             '<td class="hr-c-at" data-label="Выдан">' + (r.at ? shortDate(r.at) : '—') + '</td>' +
-            '<td class="hr-c-admin" data-label="Админ">' + esc(r.admin || '—') + '</td></tr>';
+            (adm ? '<td class="hr-c-admin" data-label="Админ">' + esc(r.admin || '—') + '</td>' : '') + '</tr>';
         }).join('') + '</tbody></table>';
     }
     body.innerHTML = total ? html : '<p class="hr-page__empty">' + (st.q ? 'Никого не нашли по запросу «' + esc(st.q) + '».' : 'Пока пусто.') + '</p>';
