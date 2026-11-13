@@ -950,7 +950,7 @@
       return m.getUTCFullYear() + '-' + t(m.getUTCMonth() + 1) + '-' + t(m.getUTCDate()) + ' ' + t(m.getUTCHours()) + ':' + t(m.getUTCMinutes()); };
     var out = [];
     var page = function (n) {
-      return fetch('https://court.rustapp.io/public/simplified-bans?exclude_stale=false&page=' + n, { headers: { 'x-public-api-key': key } })
+      return fetch('https://court.rustapp.io/public/simplified-bans?sort_by=created&exclude_stale=false&page=' + n, { headers: { 'x-public-api-key': key } })
         .then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
           var res = j.results || [];
           res.forEach(function (b) {
