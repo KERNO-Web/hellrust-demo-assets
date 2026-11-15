@@ -1,0 +1,1224 @@
+/* SKY RUST · вариант «мягкое небо» (собран .work/build_soft.mjs из custom.css) — стили поверх стандартного шаблона GameStores.
+   Вставляется в «Внешний вид → Продвинутая конфигурация → CSS».
+   Идея: обсидиан и трещина. Камень, острые сколы, один цвет лавы
+   только там, где он что-то значит (цена, выбранное, кнопка).
+   Картинки задаёт custom.js через переменные --hr-*. */
+
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Onest:wght@400;500;600;700;800&display=swap');
+
+:root, :root[data-theme] { /* [data-theme] — иначе тема шаблона (Red Black) перебивает акцент */
+  /* переменные шаблона */
+  --default-font-family: "Onest";
+  --accent-color-800: #2a7af0;
+  --accent-color-900: #1f63d0;
+  --font-color-700: #10233f;
+  --font-color-800: #4a5f7d;
+  --font-color-900: #5d7190;
+  --bg-color-700: #f1f7ff;
+  --bg-color-800: #ffffff;
+  --bg-color-900: #eaf4ff;
+  --monitoring-joining-color: #4aa3ff;
+  --monitoring-queue-color: #1452c4;
+  --product-items-trans-bg-color: rgba(234, 244, 255, .7);
+  --promocode-bg-color: #ffffff;
+
+  /* свои */
+  --obs: #eaf4ff;
+  --slab: #ffffff;
+  --slab-2: #f1f7ff;
+  --line: rgba(16, 35, 63, .08);
+  --line-2: rgba(16, 35, 63, .14);
+  --stone: #10233f;
+  --stone-dim: #4a5f7d;
+  --stone-mute: #5d7190;   /* 5.2:1 на обсидиане, 4.9:1 на карточке */
+  --ember: #1f6fe5;        /* текст и линии на тёмном */
+  --ember-fill: #2a7af0;   /* заливка под белым текстом */
+  --display: "Unbounded", "Onest", sans-serif;
+  --ui: "Onest", system-ui, sans-serif;
+  --chip: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  /* шкала длительностей движения */
+  --t-press: .16s;  /* отдача на нажатии */
+  --t-out: .2s;     /* уход наведения */
+  --t-in: .3s;      /* приход наведения */
+  --t-slow: .6s;    /* крупные карточки: портрет, жар */
+}
+
+/* ---------- основа ---------- */
+/* не трогать overflow у html: шаблон держит overflow-x на body, иначе ломается sticky */
+html { background: var(--obs); }
+body {
+  font-family: var(--ui);
+  color: var(--stone);
+  background:
+    radial-gradient(70% 520px at 50% 0, rgba(26, 108, 240, .16), rgba(26, 108, 240, 0) 70%),
+    var(--obs);
+  -webkit-font-smoothing: antialiased;
+}
+/* зерно камня: тайл 128 px рисует custom.js один раз (--hr-grain) и он лежит фоном только на каменных
+   поверхностях: плитки, плита адреса, шапка, поиск, промокод, окно, подвал. Портреты, баннер и иконки чистые.
+   Полноэкранного слоя поверх всего больше нет. */
+:root { --grain: var(--hr-grain, none) 0 0 / 128px 128px repeat; }
+.gs-loader { background: var(--obs); }
+.gs-loader__spinner { border-color: var(--ember) var(--ember) var(--slab-2); }
+
+.container { width: 100%; max-width: 1240px; padding: 0 24px; box-sizing: border-box; margin: 0 auto; }
+
+/* шаблон ставит баннер выше шапки: шапку первой */
+#root { display: flex; flex-direction: column; }
+#root > * { flex: none; }
+
+/* ---------- шапка ---------- */
+/* шапка лежит поверх баннера прозрачной и твердеет после прокрутки (класс ставит custom.js) */
+.headerContainer {
+  order: -1; position: fixed; top: 0; left: 0; right: 0; z-index: 50; max-width: none; padding: 0;
+  background: linear-gradient(180deg, rgba(234, 244, 255, .7), rgba(234, 244, 255, 0));
+  border-bottom: 1px solid transparent; transition: background .35s, border-color .35s;
+}
+.hr-scrolled .headerContainer { background: var(--grain), rgba(234, 244, 255, .97); border-bottom-color: var(--line); }
+.Header-module__wrapper {
+  max-width: 1240px; margin: 0 auto; padding: 0 24px; box-sizing: border-box;
+  height: 68px; background: transparent; gap: 32px;
+}
+.Header-module__logoWrapper { margin: 0; }
+.Header-module__logo {
+  display: flex; align-items: center; gap: 12px;
+  font: 400 19px/1 var(--display); letter-spacing: .01em; color: var(--stone);
+}
+.Header-module__logo::before {
+  content: ""; width: 38px; height: 38px; flex: none;
+  background: var(--hr-logo, none) center / cover;
+  border-radius: 999px;
+}
+.HeaderNav-module__link, .PlayerMenu-module__loginLink { text-transform: none; letter-spacing: 0; }
+.HeaderNav-module__link {
+  position: relative; padding: 24px 0;
+  font: 600 14px/1 var(--ui); color: var(--stone-dim); transition: color .2s;
+}
+.HeaderNav-module__link[class*="active"] { color: var(--stone); }
+@media (hover: hover) { .HeaderNav-module__link:hover { color: var(--stone); } }
+.PlayerMenu-module__loginLink {
+  font: 600 14px/1 var(--ui); color: var(--stone);
+  padding: 11px 16px; border: 1px solid var(--line-2); transition: border-color .2s;
+}
+@media (hover: hover) { .PlayerMenu-module__loginLink:hover { border-color: var(--stone-dim); } }
+.LangSwitcher-module__currentLang { font: 600 13px/1 var(--ui); color: var(--stone-mute); }
+
+.hr-connect {
+  display: inline-flex; align-items: center; gap: 9px; margin-right: 16px;
+  padding: 12px 20px; border: 0; cursor: pointer; border-radius: 999px;
+  font: 700 14px/1 var(--ui); color: #fff; background: var(--ember-fill);
+  transition: background .2s, transform .15s var(--ease);
+}
+@media (hover: hover) { .hr-connect:hover { background: #2b7cff; } }
+.hr-connect:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
+.hr-connect:active { transform: scale(.97); }
+
+/* иконки Tabler через маску, цвет берут от текста */
+.hr-i { display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
+.hr-i--vk { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/brand-vk.svg"); }
+.hr-i--tg { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/brand-telegram.svg"); }
+.hr-i--ds { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/brand-discord.svg"); }
+.hr-i--arrow { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/arrow-right.svg"); }
+.hr-i--copy { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/copy.svg"); }
+.hr-i--chev { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/chevron-down.svg"); }
+.hr-i--filter { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/adjustments-horizontal.svg"); }
+.hr-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- первый экран: баннер + плита с адресом и бонусами ---------- */
+.bannerContainer { position: relative; max-width: none; padding: 0; margin: 0; overflow: hidden; }
+/* шаблон сначала рисует свой баннер «GAMESTORES.RU»: прячем картинку, пока не загрузился наш арт
+   (data-hr-ready ставит custom.js по событию load), и только потом проявляем */
+.Banner-module__img {
+  display: block; width: 100%; height: clamp(440px, 40vw, 760px); object-fit: cover; object-position: center 40%;
+  border-radius: 0; visibility: hidden;
+}
+.Banner-module__img[data-hr-ready] { visibility: visible; animation: hr-settle 1.8s var(--ease) both; }
+/* затемнение: сверху под шапку, снизу в обсидиан */
+.bannerContainer::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(234, 244, 255, .55) 0, rgba(234, 244, 255, 0) 22%),
+    linear-gradient(0deg, var(--obs) 0, rgba(234, 244, 255, .85) 14%, rgba(234, 244, 255, 0) 46%);
+}
+.hr-embers { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; }
+@keyframes hr-settle { from { transform: scale(1.07); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* плита наезжает на низ баннера, сверху по ней идёт раскалённая трещина */
+.hr-plate {
+  position: relative; z-index: 3; box-sizing: border-box;
+  width: calc(100% - 48px); max-width: 1192px; margin: -96px auto 0;
+  display: grid; grid-template-columns: auto 1fr; align-items: stretch;
+  background: var(--grain), rgba(255, 255, 255, .94); border: 1px solid var(--line);
+  border-radius: 18px;
+  animation: hr-up 1s .35s var(--ease) both;
+}
+.hr-plate::before {
+  content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 100%;
+  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(31, 111, 229, 0) 100%);
+  transform-origin: left; animation: hr-crack 1.4s .8s var(--ease) both;
+}
+@keyframes hr-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes hr-crack { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.hr-plate__addr {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  padding: 22px 28px; border-right: 1px solid var(--line);
+}
+.hr-label { font: 500 12px/1 var(--ui); color: var(--stone-mute); }
+.hr-plate__ip {
+  display: inline-flex; align-items: center; align-self: flex-start; gap: 10px;
+  padding: 14px 22px; border: 0; cursor: pointer; border-radius: 999px;
+  font: 700 15px/1 var(--ui); color: #fff; background: var(--ember-fill);
+  transition: background .2s, transform .15s var(--ease);
+}
+.hr-plate__ip .hr-i { width: 18px; height: 18px; color: #fff; }
+.hr-plate__ip:active { transform: scale(.97); }
+@media (hover: hover) { .hr-plate__ip:hover { background: #2b7cff; } }
+.hr-plate__ip:focus-visible { outline-offset: 4px; }
+.hr-plate__bonus { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 22px 28px; }
+.hr-steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.hr-step { display: flex; align-items: baseline; gap: 10px; padding-right: 20px; }
+.hr-step + .hr-step { padding-left: 20px; border-left: 1px solid var(--line); }
+.hr-step b { font: 400 32px/1 var(--display); color: var(--ember); }
+.hr-step span { font: 500 13px/1.2 var(--ui); color: var(--stone-dim); white-space: nowrap; }
+
+/* ---------- магазин ----------
+   Слева колонка навигации: заголовок, оглавление категорий с числом предметов,
+   под ним сервер и сообщество. Справа поиск и витрина, разбитая на группы по категориям.
+   Обёртки магазина раскрыты (display: contents), их дети встают прямо в сетку main. */
+.Index-module__wrapper {
+  position: relative; isolation: isolate;
+  display: grid; grid-template-columns: 216px minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto 1fr auto; /* 1 поиск, 2 фильтры, 3 категории, 4 витрина, 3–5 слева колонка, 6 подвал */
+  column-gap: 56px; margin-top: 88px; padding-bottom: 96px; align-items: start;
+}
+/* арт баннера тянется под магазин: тёмный, без цвета, растворяется вниз */
+.Index-module__wrapper::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: -40px; left: 50%; width: 100vw; height: 760px; transform: translateX(-50%);
+  background: var(--hr-bg, none) 0 100% / 180% auto no-repeat;
+  filter: grayscale(.5) brightness(.35) contrast(1.2);
+  opacity: .45;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 30%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 30%, transparent 100%);
+}
+.Shop-module__wrapper, .Shop-module__wrapper > .boxBody { display: contents; }
+
+/* сбрасываем коробки шаблона только на главной; окна и кабинет оформлены отдельно */
+.Index-module__wrapper .boxHeader { margin: 0; padding: 0; background: none; border: 0; border-radius: 0; }
+.Index-module__wrapper .boxBody, .Index-module__wrapper .boxFooter { padding: 0; background: none; border: 0; border-radius: 0; }
+
+/* заголовок */
+.Index-module__wrapper .Shop-module__header {
+  grid-column: 1; grid-row: 1 / 3; align-self: end; width: auto; margin: 0 0 36px;
+  font: 400 40px/1 var(--display); letter-spacing: -.01em; color: var(--stone);
+}
+
+/* поиск: во всю ширину витрины, главный инструмент на 316 предметах */
+.Shop-module__wrapper .Search-module__wrapper { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 12px; }
+.Search-module__wrapper {
+  height: 52px; display: flex; align-items: center; overflow: visible;
+  background: var(--grain), var(--slab); border: 1px solid var(--line-2); border-radius: 0;
+  border-radius: 18px;
+  transition: border-color .2s, background .2s;
+}
+.Search-module__wrapper:focus-within { border-color: var(--stone-dim); background: var(--slab-2); }
+.Search-module__iconWrapper { height: 100%; padding: 0 6px 0 18px; background: none; color: var(--stone-mute); }
+.Search-module__icon { width: 20px; height: 20px; }
+.Search-module__icon path { stroke: currentColor; }
+.Search-module__wrapper:focus-within .Search-module__iconWrapper { color: var(--ember); }
+.Search-module__input {
+  height: 100%; padding: 0 16px 0 10px; background: none; border: 0; outline: 0;
+  font: 500 16px/1 var(--ui); color: var(--stone);
+}
+.Search-module__input::placeholder { color: var(--stone-mute); opacity: 1; }
+.Search-module__input:focus-visible { outline: 0; }
+
+/* категории: полоса над витриной, как на телефоне. Имя и число, выбранное подчёркнуто раскалённой линией.
+   На ПК переносятся на вторую строку, а не прячутся за прокруткой: клиент просил видеть все сразу */
+.Categories-module__categories {
+  grid-column: 2; grid-row: 3; align-self: start; position: sticky; top: 68px; z-index: 5;
+  display: flex; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: 0 24px;
+  width: auto; margin: 0 0 24px; padding: 2px 0 0; border: 0; border-bottom: 1px solid var(--line-2);
+  background: rgba(234, 244, 255, .96);
+}
+/* три строки и больше: не липнет, иначе закрывает пол-экрана (считает custom.js) */
+.hr-cats-tall .Categories-module__categories { position: static; }
+.Categories-module__category {
+  position: relative; display: flex; align-items: baseline; gap: 7px; flex: none; width: auto; margin: 0; padding: 12px 0 11px;
+  background: none; border: 0; border-radius: 0; text-align: left; white-space: nowrap;
+  font: 600 14px/1.2 var(--ui); color: var(--stone-dim); transition: color .2s;
+}
+.Categories-module__category::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: var(--ember); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease);
+}
+.Categories-module__category::after {
+  content: attr(data-hr-n);
+  font: 600 12px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); transition: color .2s;
+}
+.Categories-module__category.Categories-module__enableFocus:focus { background: none; color: var(--stone); }
+.Categories-module__category.Categories-module__active { background: none; color: var(--stone); }
+.Categories-module__category.Categories-module__active::before { transform: scaleX(1); }
+.Categories-module__category.Categories-module__active::after { color: var(--ember); }
+/* пустая категория: приглушена, но читается (4.5:1 и выше) */
+.Categories-module__category[data-hr-n="0"] { color: var(--stone-mute); }
+.Categories-module__category.Categories-module__active[data-hr-n="0"] { color: var(--stone); }
+
+/* левая колонка (промокод, вайп, сервер, сообщество) липнет одним куском (смещение считает custom.js).
+   Не влезает в экран — смещение отрицательное, колонка липнет низом */
+.hr-stick .Index-module__wrapper > .Widgets-module__wrapper { position: sticky; top: var(--hr-aside-top, 92px); }
+/* у шаблона на наведении, фокусе и нажатии категория заливается красным: глушим */
+.Categories-module__category:is(:hover, :focus, :active),
+.Categories-module__category.Categories-module__active:is(:hover, :focus, :active) { background: none; }
+
+/* ---------- сервер и сообщество ---------- */
+.Index-module__wrapper > .Widgets-module__wrapper {
+  grid-column: 1; grid-row: 3 / 6; align-self: start;
+  width: auto; min-width: 0; max-width: none; margin: 0;
+  display: flex; flex-direction: column; gap: 36px;
+}
+.Widgets-module__widgetWrapper, .Widgets-module__widgetWrapper + .Widgets-module__widgetWrapper { margin: 0; }
+/* каждый блок колонки — свой раздел: заголовок с линией-трещиной, как у групп справа */
+.Widgets-module__wrapper .boxHeader, .hr-drawer .boxHeader {
+  display: flex; align-items: center; gap: 12px; margin: 0 0 14px;
+  font: 400 16px/1.1 var(--display); color: var(--stone); white-space: nowrap;
+}
+.Widgets-module__wrapper .boxHeader::after, .hr-drawer .boxHeader::after {
+  content: ""; flex: 1 1 auto; height: 1px; margin-top: 2px;
+  background: linear-gradient(90deg, var(--ember) 0, rgba(31, 111, 229, 0) 56px) no-repeat, var(--line);
+}
+.MonitoringWidget-module__body { padding: 0; background: none; border: 0; }
+.Widgets-module__wrapper .errorMessage { display: block; width: auto; margin: 0; text-align: left; font: 500 14px/1.4 var(--ui); color: var(--stone-mute); }
+
+/* строка сервера (появится, когда в «Управлении» добавят сервер) */
+.MonitoringServer-module__name { margin-bottom: 8px; font: 600 14px/1.3 var(--ui); color: var(--stone); }
+.MonitoringServer-module__progressBarWrapper { height: 6px; margin-bottom: 8px; border-radius: 0; background: var(--slab-2); }
+.MonitoringServer-module__progressBar { border-radius: 0; }
+.MonitoringServer-module__progressBarAnim { display: none; }
+.MonitoringServer-module__progressInfo { border-radius: 0; background: var(--slab-2); box-shadow: none; font: 500 13px/1.4 var(--ui); }
+.MonitoringServer-module__progressInfo::before { border-top-color: var(--slab-2); }
+.MonitoringServer-module__playersInfo { font: 600 13px/1.4 var(--ui); font-variant-numeric: tabular-nums; }
+/* онлайн сервера: главная цифра колонки, крупно камнем; «/ 500» тише */
+.MonitoringServer-module__info { margin-top: 2px; }
+.MonitoringServer-module__info > span { font: 400 20px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); }
+.MonitoringServer-module__olineDivider { margin: 0 6px; transform: none; color: var(--stone-mute); }
+.MonitoringServer-module__btn { display: grid; place-items: center; width: 32px; height: 32px; }
+.MonitoringServer-module__icon { stroke: var(--stone-mute); }
+/* «Обновить» у шаблона — красная плашка во всю ширину; делаем тихой контурной кнопкой */
+.Widgets-module__wrapper .MonitoringWidget-module__updateBtn.Button-module__btn {
+  margin-top: 10px; padding: 7px 12px; width: auto; border-radius: 0;
+  background: none; border: 1px solid var(--line-2); color: var(--stone-dim);
+  font: 600 13px/1 var(--ui); box-shadow: none; transition: border-color .2s, color .2s;
+}
+.Widgets-module__wrapper .MonitoringWidget-module__updateBtn.Button-module__btn:is(:hover, :focus-visible) { background: none; border-color: var(--ember); color: var(--stone); }
+
+/* порядок в колонке: промокод, сервер, вайп, сообщество */
+.hr-promo-wrap { order: 1; }
+.Widgets-module__wrapper > [data-widgettype="monitoring"] { order: 2; }
+.hr-wipe-wrap { order: 3; }
+
+/* промокод (добавляет custom.js): каменная плита со сколом, код раскалён, по клику копируется */
+.hr-promo {
+  position: relative; padding: 12px 14px; border: 1px solid var(--line-2);
+  background: var(--grain), var(--slab);
+  border-radius: 18px;
+}
+.hr-promo__code {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 400 20px/1.1 var(--display); letter-spacing: .02em; color: var(--ember);
+}
+.hr-promo__code .hr-i { width: 18px; height: 18px; color: var(--stone-mute); }
+.hr-promo__code span { font: inherit; color: inherit; letter-spacing: inherit; }
+.hr-promo__text { margin: 6px 0 8px; font: 500 13px/1.4 var(--ui); color: var(--stone-dim); }
+.hr-promo__go {
+  display: inline-flex; align-items: center; gap: 6px; font: 600 14px/1.2 var(--ui); color: var(--stone); text-decoration: none;
+}
+.hr-promo__go .hr-i { width: 16px; height: 16px; color: var(--stone-mute); }
+.hr-promo__hint { margin: 4px 0 0; font: 400 12px/1.4 var(--ui); color: var(--stone-mute); }
+
+/* вайп (добавляет custom.js): отсчёт крупно, дата строкой, дальше две следующие */
+.hr-wipe__left { margin: 0 0 4px; font: 400 20px/1.1 var(--display); color: var(--stone); }
+.hr-wipe__when { margin: 0; font: 500 13px/1.4 var(--ui); color: var(--stone-dim); }
+.hr-wipe__next { margin: 4px 0 0; padding: 0; list-style: none; font: 500 12px/1.4 var(--ui); color: var(--stone-mute); }
+.hr-wipe__next li { display: inline; }
+.hr-wipe__next li:first-child::before { content: "Дальше: "; }
+.hr-wipe__next li + li::before { content: "; "; }
+.hr-wipe__note { margin: 4px 0 0; font: 400 12px/1.4 var(--ui); color: var(--stone-mute); }
+
+/* сообщество (добавляет custom.js) */
+.hr-social-wrap { order: 9; }
+.hr-social { display: flex; flex-direction: column; }
+.hr-social__link {
+  position: relative; display: grid; grid-template-columns: 36px 1fr 16px; align-items: center; gap: 12px;
+  padding: 8px 0; text-decoration: none; color: var(--stone);
+}
+.hr-social__link + .hr-social__link { border-top: 1px solid var(--line); }
+.hr-social__ico {
+  display: grid; place-items: center; width: 36px; height: 36px; background: var(--slab-2); color: var(--stone-dim);
+  border-radius: 8px;
+  transition: background .25s, color .25s;
+}
+.hr-social__ico .hr-i { width: 20px; height: 20px; }
+.hr-social__name { display: block; font: 600 14px/1.2 var(--ui); }
+.hr-social__hint { display: block; margin-top: 3px; font: 400 13px/1.3 var(--ui); color: var(--stone-mute); }
+.hr-social__link > .hr-i:last-child { width: 16px; height: 16px; color: var(--stone-mute); transition: transform .25s var(--ease), color .2s; }
+
+/* ---------- сортировка и фильтры (вставляет custom.js после поиска) ----------
+   Одна строка под поиском. Те же каменные поля, что поиск; выбранное отмечено трещиной снизу. */
+[data-hr-off] { display: none !important; }
+.hr-tools {
+  grid-column: 2; grid-row: 2; align-self: start; margin: 0 0 32px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+  font: 600 14px/1 var(--ui); color: var(--stone-dim);
+}
+.hr-tools select, .hr-tools input[type="text"], .hr-tools__toggle, .hr-seg, .hr-tools__reset {
+  height: 40px; box-sizing: border-box; border: 1px solid var(--line-2); border-radius: 0; background: var(--grain), var(--slab);
+  font: 600 14px/1 var(--ui); color: var(--stone);
+}
+.hr-sort { position: relative; display: inline-flex; align-items: center; }
+.hr-sort__select { appearance: none; -webkit-appearance: none; padding: 0 38px 0 14px; cursor: pointer; }
+.hr-sort .hr-i { position: absolute; right: 12px; width: 16px; height: 16px; color: var(--stone-mute); pointer-events: none; }
+.hr-sort__select option { background: var(--slab); color: var(--stone); }
+.hr-tools__toggle { display: none; align-items: center; gap: 8px; padding: 0 14px; cursor: pointer; }
+.hr-tools__toggle .hr-i { width: 18px; height: 18px; color: var(--stone-mute); }
+.hr-tools__n:not(:empty) {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box;
+  background: var(--ember-fill); color: #fff; font: 400 12px/1 var(--display);
+}
+.hr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.hr-price, .hr-seg { margin: 0; padding: 0; border: 0; min-width: 0; }
+.hr-price { display: inline-flex; align-items: center; gap: 6px; }
+.hr-price__label { margin-right: 4px; color: var(--stone-dim); }
+.hr-price input { width: 76px; padding: 0 10px; font-variant-numeric: tabular-nums; }
+.hr-price input::placeholder { color: var(--stone-mute); opacity: 1; }
+.hr-check { display: inline-flex; align-items: center; gap: 10px; height: 40px; cursor: pointer; color: var(--stone-dim); }
+.hr-check input {
+  appearance: none; -webkit-appearance: none; flex: none; width: 18px; height: 18px; margin: 0;
+  border: 1px solid var(--stone-mute); background: var(--obs); cursor: pointer;
+}
+.hr-check input:checked { background: var(--ember-fill); border-color: var(--ember-fill); box-shadow: inset 0 0 0 3px var(--obs); }
+.hr-check input:checked + span { color: var(--stone); }
+.hr-seg { display: inline-flex; padding: 0; }
+.hr-seg label { position: relative; display: flex; }
+.hr-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.hr-seg span { display: flex; align-items: center; padding: 0 14px; height: 38px; cursor: pointer; color: var(--stone-dim); }
+.hr-seg label + label span { border-left: 1px solid var(--line-2); }
+.hr-seg input:checked + span { color: var(--stone); background: var(--slab-2); box-shadow: inset 0 -2px 0 var(--ember); }
+.hr-seg input:focus-visible + span { outline: 2px solid var(--ember); outline-offset: -2px; }
+.hr-tools__reset { display: none; padding: 0 14px; cursor: pointer; background: none; color: var(--stone-dim); }
+.hr-tools[data-active] .hr-tools__reset { display: inline-flex; align-items: center; }
+.hr-tools select:focus-visible, .hr-tools input[type="text"]:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+
+/* всё отфильтровано: своё пустое состояние в зоне витрины */
+.hr-nores { grid-column: 1 / -1; order: -1; padding: 4px 0 24px; }
+.hr-nores__title { margin: 0 0 6px; font: 400 24px/1.2 var(--display); color: var(--stone); }
+.hr-nores__text { margin: 0 0 18px; font: 500 15px/1.5 var(--ui); color: var(--stone-dim); }
+.hr-nores__reset {
+  height: 44px; padding: 0 20px; border: 0; cursor: pointer; border-radius: 999px;
+  font: 700 14px/1 var(--ui); color: #fff; background: var(--ember-fill);
+}
+.hr-nores__reset:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
+
+/* ---------- витрина ---------- */
+.Shop-module__wrapper .Products-module__wrapper {
+  grid-column: 2; grid-row: 4 / 6; margin: 0; width: auto;
+  display: grid; grid-template-columns: repeat(60, minmax(0, 1fr)); gap: 2px;
+  background: none; border: 0;
+}
+/* 60 колонок: обычная плитка 10 (6 в ряд), услуга-портрет 12 (5 в ряд), набор и кейс 20 (3 в ряд) */
+.Products-module__wrapper > .Product-module__wrapper { grid-column: span 10; }
+.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 12; }
+.Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 20; }
+
+/* пустая выдача: шаблон кладёт «Данных нет» рядом с сеткой, ставим его в зону витрины.
+   Текст подменяет custom.js: первая строка заголовок, вторая что делать */
+.Shop-module__wrapper .errorMessage {
+  grid-column: 2; grid-row: 4; align-self: start; display: block; width: auto; max-width: 46ch; margin: 4px 0 0;
+  text-align: left; white-space: pre-line; font: 500 15px/1.5 var(--ui); color: var(--stone-dim);
+}
+.Shop-module__wrapper .errorMessage::first-line { font: 400 24px/1.6 var(--display); color: var(--stone); }
+
+/* заголовок группы (вставляет custom.js перед первым предметом категории) */
+.hr-group {
+  grid-column: 1 / -1; display: flex; align-items: baseline; gap: 16px;
+  padding: 56px 0 16px;
+}
+.hr-group--top { padding-top: 4px; }
+.hr-group__name { margin: 0; font: 400 24px/1.1 var(--display); letter-spacing: -.01em; color: var(--stone); white-space: nowrap; }
+/* линия заголовка начинается трещиной лавы, как верх плиты с адресом */
+.hr-group__rule {
+  flex: 1 1 auto; height: 1px; align-self: center; margin-top: 4px;
+  background: linear-gradient(90deg, var(--ember) 0, rgba(31, 111, 229, 0) 96px) no-repeat, var(--line);
+}
+.hr-group__meta { font: 500 13px/1.2 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); white-space: nowrap; }
+
+/* карточка предмета: плита из того же камня, что привилегии. Сверху тёплый отсвет лавы (тот же,
+   что на портретах), внизу холодный камень. Первым читается предмет, вторым цена, третьим имя.
+   По углам служебное: скидка слева, количество справа, как в слоте инвентаря Rust.
+   Иконки выравнивает custom.js (--hr-s, --hr-x, --hr-y); тёмные он заранее высветляет на canvas (--hr-lit).
+   Фильтров на плитках нет: на 320 иконках они грузили видеокарту при прокрутке.
+
+   Хуки для motion: --hr-hover (0..1, зарегистрирован через @property, его можно анимировать)
+   управляет всем состоянием наведения: подъём иконки, отсвет ::before, цена-кнопка, трещина ::after.
+   Наведение идёт по очереди из одной переменной: --hr-hover растёт линейно, у каждой части своё окно
+   (иконка 0–.5, отсвет .1–.7, цена .25–.75, трещина .4–1) и своё смягчение 1-(1-a)², уход в обратном порядке. */
+@property --hr-hover { syntax: '<number>'; inherits: true; initial-value: 0; }
+.Product-module__wrapper {
+  --hr-hover: 0;
+  --hr-a1: clamp(0, var(--hr-hover) / .5, 1);
+  --hr-a2: clamp(0, (var(--hr-hover) - .1) / .6, 1);
+  --hr-a3: clamp(0, (var(--hr-hover) - .25) / .5, 1);
+  --hr-a4: clamp(0, (var(--hr-hover) - .4) / .6, 1);
+  --hr-lift: calc(var(--hr-a1) * (2 - var(--hr-a1)));
+  --hr-glow: calc(var(--hr-a2) * (2 - var(--hr-a2)));
+  --hr-price: calc(var(--hr-a3) * (2 - var(--hr-a3)));
+  --hr-crack: calc(var(--hr-a4) * (2 - var(--hr-a4)));
+  position: relative; width: auto; height: auto; aspect-ratio: auto; padding: 12px 14px 14px; overflow: hidden; cursor: pointer;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "img" "price" "name";
+  align-content: start;
+  background: var(--grain), linear-gradient(180deg, #d6e7ff 0, #e3efff 38%, #f4f9ff 72%, #f4f9ff 100%);
+  border-radius: 0; animation: none;
+  border-radius: 18px;
+  transition: --hr-hover var(--t-out) linear, transform var(--t-press) var(--ease);
+}
+/* приход наведения медленнее ухода: на приходе виден порядок, уход не мешает вести мышь дальше */
+.Product-module__wrapper:is(:hover, :focus-visible) { transition-duration: var(--t-in), var(--t-press); }
+/* отдача на нажатии: плитка чуть проседает и сразу возвращается */
+.Product-module__wrapper:active { transform: scale(.97); }
+.Product-module__wrapper[data-hr-feat]:active { transform: scale(.985); }
+.Product-module__wrapper:focus-visible { --hr-hover: 1; outline: 2px solid var(--ember); outline-offset: -2px; }
+/* отсвет наведения: лава снизу, по трещине. Один псевдоэлемент, без фильтров */
+.Product-module__wrapper::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(0deg, rgba(26, 108, 240, .22) 0, rgba(26, 108, 240, .06) 40%, rgba(26, 108, 240, 0) 70%);
+  opacity: var(--hr-glow);
+}
+.Product-module__wrapper > * { position: relative; z-index: 1; }
+.Product-module__img, .productModalImg {
+  content: var(--hr-lit, normal);
+  transform: translate(var(--hr-x, 0), var(--hr-y, 0)) scale(var(--hr-s, 1));
+}
+.Product-module__img {
+  grid-area: img; justify-self: center; display: block;
+  width: 100px; max-width: 76%; height: auto; aspect-ratio: 1; margin: 10px 0 12px; object-fit: contain;
+  translate: 0 calc(var(--hr-lift) * -5px);
+}
+.Product-module__name,
+.Product-module__wrapper:hover .Product-module__name,
+.Product-module__wrapper:active .Product-module__name {
+  grid-area: name; position: relative; width: auto; max-width: none; min-height: 2.6em; margin-top: 6px; padding: 0; z-index: 1;
+  background: none; transform: none; opacity: 1; visibility: visible;
+  font: 500 13px/1.3 var(--ui); color: var(--stone-dim); text-align: left;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;
+}
+/* цена: в покое камень, на наведении раскаляется в кнопку */
+.Product-module__price {
+  grid-area: price; position: relative; justify-self: start; display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
+  min-width: 0; margin: 0 0 0 -7px; padding: 5px 7px; border-radius: 0;
+  background: rgb(26 108 240 / var(--hr-price));
+  border-radius: 8px;
+  font: 400 17px/1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: color-mix(in srgb, var(--ember) calc(var(--hr-price) * 100%), var(--stone));
+}
+.Product-module__price span { font: inherit; color: inherit; }
+.Product-module__oldPrice { margin: 0; font: 600 12px/1 var(--ui); color: color-mix(in srgb, var(--ember) calc(var(--hr-price) * 100%), var(--stone-mute)); text-decoration: line-through; }
+.Product-module__oldPrice::after { display: none; }
+.Product-module__count,
+.Product-module__wrapper:hover .Product-module__count,
+.Product-module__wrapper:active .Product-module__count {
+  position: absolute; top: 10px; right: 14px; bottom: auto; left: auto; margin: 0; padding: 0; opacity: 1; z-index: 1;
+  background: none; border: 0; font: 600 12px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-dim);
+}
+.Product-module__discount {
+  position: absolute; top: 10px; left: 14px; right: auto; padding: 0; z-index: 1;
+  background: none; border-radius: 0; font: 400 13px/1 var(--display); color: var(--ember); white-space: nowrap;
+}
+.Product-module__favorite { position: absolute; top: 4px; left: 6px; right: auto; padding: 6px; color: var(--stone-mute); }
+.Product-module__favorite[data-favorite=true] { color: var(--ember); }
+.Product-module__favoriteWithDiscount { top: 26px; }
+
+/* трещина: общий приём для наведения и выбранного */
+.hr-social__link::after, .Product-module__wrapper::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; z-index: 2;
+  background: var(--ember); transform: scaleX(0); transform-origin: left;
+  transition: transform .45s var(--ease); pointer-events: none;
+}
+.Product-module__wrapper::after { transform: scaleX(var(--hr-crack)); transition: none; }
+.hr-social__link::after { bottom: -1px; }
+
+/* подвал магазина: юридический текст платформы, тихо под витриной */
+.Shop-module__wrapper > .boxFooter {
+  grid-column: 2; grid-row: 6; margin-top: 64px; padding: 24px; border-top: 1px solid var(--line); background: var(--grain), var(--slab);
+  border-image: linear-gradient(90deg, var(--ember) 0, rgba(31, 111, 229, 0) 96px, var(--line) 96px) 1;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 48px; align-items: start;
+}
+.ShopFooter-module__text { margin: 0; max-width: 62ch; text-align: left; font: 400 12px/1.5 var(--ui); color: var(--stone-mute); }
+.ShopFooter-module__links { flex-direction: column; align-items: flex-start; row-gap: 8px; text-transform: none; }
+.ShopFooter-module__link { padding: 0; text-align: left; font: 500 13px/1.3 var(--ui); color: var(--stone-dim); }
+
+/* ---------- витрина: привилегии, наборы, кейсы ----------
+   Те же плиты, только крупнее и со сколом угла, как плита с адресом. Новых эффектов нет:
+   затемнение снизу у портрета то же, что у баннера, под ним читается текст. */
+.Product-module__wrapper[data-hr-feat] {
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+}
+.Product-module__wrapper[data-hr-feat] { grid-template-areas: "img" "name" "price"; }
+.Product-module__wrapper[data-hr-feat] .Product-module__name {
+  min-height: 0; margin-top: 0; color: var(--stone); font: 400 20px/1.15 var(--display); letter-spacing: -.01em; -webkit-line-clamp: 2;
+}
+.Product-module__wrapper[data-hr-feat] .Product-module__price { margin-top: 10px; font-size: 20px; padding: 6px 8px; margin-left: -8px; }
+.Product-module__wrapper[data-hr-feat] .Product-module__oldPrice { font-size: 14px; }
+/* скидка на витрине: залитая метка со сколом */
+.Product-module__wrapper[data-hr-feat] .Product-module__discount {
+  top: 14px; left: auto; right: 14px; padding: 6px 8px 5px; background: var(--ember-fill); color: #fff; font-size: 14px;
+  border-radius: 8px; z-index: 3;
+}
+.Product-module__wrapper[data-hr-feat] .Product-module__count { top: 16px; right: 18px; font-size: 13px; z-index: 3; }
+
+/* привилегия: портрет на всю карточку, имя и цена внизу */
+.Product-module__wrapper[data-hr-feat="portrait"] {
+  aspect-ratio: 3 / 4; padding: 20px; align-content: end; background: var(--obs);
+}
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__img {
+  grid-area: auto; /* иначе контейнером станет пустая область img высотой 0 */
+  position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; max-width: none; margin: 0;
+  object-fit: cover; object-position: 50% 20%; transform: none; translate: none;
+  transition: transform var(--t-slow) var(--ease);
+}
+.Product-module__wrapper[data-hr-feat="portrait"]::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 1;
+  background: var(--grain), linear-gradient(0deg, var(--obs) 0, rgba(234, 244, 255, .86) 26%, rgba(234, 244, 255, 0) 58%);
+}
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name,
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__price { position: relative; z-index: 2; }
+/* пять в ряд и длинные названия услуг: размер от ширины карточки, до трёх строк, перенос по словам */
+.Product-module__wrapper[data-hr-feat="portrait"] { container-type: inline-size; padding: 16px; }
+.Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name { font-size: clamp(14px, 11cqi, 24px); line-height: 1.08; -webkit-line-clamp: 3; hyphens: auto; }
+.Product-module__wrapper[data-hr-feat="portrait"]::after { z-index: 3; }
+
+/* привилегия: живой жар. Тлеющие искры поднимаются из-под имени и гаснут, не доходя до лица.
+   Слой вставляет custom.js (.hr-heat) поверх затемнения и под текстом. Двигаются только transform
+   у двух слоёв точек (дальний мелкий и медленный, ближний крупнее), всё считает компоновщик.
+   Пока карточка не на экране или вкладка скрыта, анимация на паузе (атрибут data-on ставит custom.js).
+   На наведении ближние искры разгораются и снизу проступает жар. */
+.Product-module__wrapper > .hr-heat {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  transform: scaleX(calc(1 - 2 * mod(var(--hr-seed, 0), 2)));
+}
+.hr-heat::before {
+  content: ""; position: absolute; inset: 0; opacity: 0;
+  background: radial-gradient(90% 38% at 50% 100%, rgba(31, 111, 229, .34), rgba(26, 108, 240, .1) 55%, rgba(26, 108, 240, 0) 100%);
+  transition: opacity var(--t-slow) var(--ease);
+}
+.hr-heat > i {
+  position: absolute; inset: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(0deg, transparent 0, #000 30%, #000 48%, transparent 80%);
+  mask-image: linear-gradient(0deg, transparent 0, #000 30%, #000 48%, transparent 80%);
+  animation: hr-sway 7s ease-in-out infinite alternate both paused;
+  animation-delay: calc(var(--hr-seed, 0) * -2.3s);
+}
+.hr-heat > i::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 200%;
+  background-size: 100% 50%; background-repeat: repeat;
+  animation: hr-rise 18s linear infinite paused;
+  animation-delay: calc(var(--hr-seed, 0) * -4.1s);
+}
+/* дальние искры: мелкие, тусклые */
+.hr-heat > i:first-child::before {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(170, 215, 255, .8) 0 .7px, rgba(31, 111, 229, .25) 1.4px, rgba(31, 111, 229, 0) 3px),
+    radial-gradient(circle at 31% 64%, rgba(170, 215, 255, .7) 0 .6px, rgba(31, 111, 229, .2) 1.3px, rgba(31, 111, 229, 0) 3px),
+    radial-gradient(circle at 47% 9%, rgba(170, 215, 255, .6) 0 .6px, rgba(31, 111, 229, .2) 1.2px, rgba(31, 111, 229, 0) 2.6px),
+    radial-gradient(circle at 58% 41%, rgba(170, 215, 255, .8) 0 .8px, rgba(31, 111, 229, .25) 1.5px, rgba(31, 111, 229, 0) 3.2px),
+    radial-gradient(circle at 71% 83%, rgba(170, 215, 255, .7) 0 .7px, rgba(31, 111, 229, .2) 1.4px, rgba(31, 111, 229, 0) 3px),
+    radial-gradient(circle at 86% 27%, rgba(170, 215, 255, .75) 0 .7px, rgba(31, 111, 229, .22) 1.4px, rgba(31, 111, 229, 0) 3px),
+    radial-gradient(circle at 22% 92%, rgba(170, 215, 255, .6) 0 .6px, rgba(31, 111, 229, .2) 1.2px, rgba(31, 111, 229, 0) 2.6px),
+    radial-gradient(circle at 93% 58%, rgba(170, 215, 255, .7) 0 .7px, rgba(31, 111, 229, .2) 1.4px, rgba(31, 111, 229, 0) 3px),
+    radial-gradient(circle at 5% 47%, rgba(170, 215, 255, .6) 0 .6px, rgba(31, 111, 229, .2) 1.2px, rgba(31, 111, 229, 0) 2.6px);
+}
+/* ближние искры: крупнее, быстрее, качаются с другим периодом */
+.hr-heat > i:last-child { opacity: .7; animation-duration: 5.2s; transition: opacity var(--t-slow) var(--ease); }
+.hr-heat > i:last-child::before {
+  animation-duration: 11s;
+  background-image:
+    radial-gradient(circle at 18% 55%, rgba(200, 230, 255, .95) 0 1.3px, rgba(90, 170, 255, .35) 2.4px, rgba(31, 111, 229, 0) 6px),
+    radial-gradient(circle at 64% 12%, rgba(200, 230, 255, .85) 0 1.1px, rgba(90, 170, 255, .3) 2.2px, rgba(31, 111, 229, 0) 5px),
+    radial-gradient(circle at 83% 72%, rgba(200, 230, 255, .95) 0 1.4px, rgba(90, 170, 255, .35) 2.6px, rgba(31, 111, 229, 0) 6.5px),
+    radial-gradient(circle at 38% 88%, rgba(200, 230, 255, .8) 0 1px, rgba(90, 170, 255, .3) 2px, rgba(31, 111, 229, 0) 5px),
+    radial-gradient(circle at 9% 30%, rgba(200, 230, 255, .85) 0 1.1px, rgba(90, 170, 255, .3) 2.2px, rgba(31, 111, 229, 0) 5px);
+}
+.hr-heat[data-on] > i, .hr-heat[data-on] > i::before { animation-play-state: running; }
+@keyframes hr-rise { to { transform: translateY(-50%); } }
+@keyframes hr-sway { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
+
+/* набор и кейс: предмет крупно на прозрачном фоне */
+.Product-module__wrapper[data-hr-feat="item"] { padding: 20px 20px 18px; }
+.Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 152px; margin: 10px 0 20px; }
+
+/* ---------- окно покупки ----------
+   Та же плита, что под баннером: обсидиан, скол угла, трещина по верхней кромке.
+   Лава одна: кнопка «Получить». */
+.ModalLayout-module__wrapper { background: rgba(16, 35, 63, .84); }
+.ModalLayout-module__overflowWrapper::-webkit-scrollbar-track { background: var(--obs); }
+.ModalLayout-module__overflowWrapper::-webkit-scrollbar-thumb { background: var(--slab-2); }
+.ModalLayout-module__positionWrapper { align-items: center; padding: 24px; }
+.ModalLayout-module__modal {
+  position: relative; margin: 0; text-align: left; border-radius: 0; box-shadow: none;
+  background: var(--grain), var(--slab); border: 1px solid var(--line-2);
+  border-radius: 18px;
+}
+.ModalLayout-module__modal::before {
+  content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 100%; z-index: 1;
+  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(31, 111, 229, 0) 100%);
+}
+.ProductModal-module__item, .ProductModal-module__bp, .ProductModal-module__command, .ProductModal-module__dropdown { width: 440px; }
+.ModalLayout-module__modal > .boxHeader {
+  display: block; margin: 0; padding: 26px 28px 0; background: none; border-radius: 0;
+  font: 400 24px/1.15 var(--display); letter-spacing: -.01em; color: var(--stone);
+}
+.ModalLayout-module__modal > .boxBody { padding: 8px 28px 24px; background: none; border-radius: 0; }
+.ModalLayout-module__modal > .boxFooter {
+  display: flex; gap: 12px; padding: 0 28px 28px; background: none; border-radius: 0;
+}
+.productModalImg { display: block; width: 100%; max-width: none; height: 220px; margin: 8px 0 20px; object-fit: contain; }
+.productModalDescription { background: var(--obs); color: var(--stone-dim); font: 400 14px/1.5 var(--ui); }
+.productModalFormRow { gap: 16px; margin-bottom: 18px; }
+.TotalSum-module__label, .CountSelector-module__label, .ItemContent-module__label {
+  margin-bottom: 8px; font: 600 13px/1.2 var(--ui); color: var(--stone-dim);
+}
+.TotalSum-module__inputWrapper, .CountSelector-module__inputWrapper {
+  height: 48px; border-radius: 0; background: var(--obs); border: 1px solid var(--line-2); overflow: hidden;
+}
+.TotalSum-module__currency {
+  order: 2; display: flex; align-items: center; padding: 0 16px 0 0; line-height: 1; background: none;
+  font: 400 18px/1 var(--display); color: var(--stone-mute);
+}
+.TotalSum-module__input, .CountSelector-module__input {
+  min-width: 0; padding: 0 14px; background: none; border: 0; opacity: 1;
+  font: 400 18px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); -webkit-text-fill-color: var(--stone);
+}
+.CountSelector-module__input { text-align: center; padding: 0 4px; }
+.CountSelector-module__changeCountBtn { flex: none; width: 46px; background: none; color: var(--stone-dim); transition: background .2s, color .2s; }
+.CountSelector-module__changeCountBtn.CountSelector-module__left { border-right: 1px solid var(--line-2); }
+.CountSelector-module__changeCountBtn.CountSelector-module__right { border-left: 1px solid var(--line-2); }
+.CountSelector-module__changeCountBtn:focus { background: none; }
+.CountSelector-module__changeCountBtn:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+.CountSelector-module__icon { width: 18px; height: 18px; }
+/* окно привилегии: портрет кадром во всю ширину окна */
+.hr-modal-portrait .productModalImg {
+  width: calc(100% + 56px); max-width: none; height: 280px; margin: 8px -28px 22px;
+  object-fit: cover; object-position: 50% 20%; transform: none; content: normal;
+}
+/* подсказка платформы: спокойная заметка, без красного */
+.productModalGiveText {
+  display: block; padding: 2px 0 2px 12px; border-left: 2px solid var(--line-2); text-align: left;
+  font: 500 14px/1.45 var(--ui); color: var(--stone-dim);
+}
+.productModalProductAvailability { text-align: left; color: var(--stone-dim); }
+.ModalLayout-module__modal .Button-module__btn {
+  height: 50px; padding: 0 22px; border: 1px solid transparent; border-radius: 0;
+  font: 700 15px/1 var(--ui); transition: background .2s, color .2s, border-color .2s;
+}
+.ModalLayout-module__modal .Button-module__btn.Button-module__gray { background: none; border-color: var(--line-2); color: var(--stone-dim); }
+.ModalLayout-module__modal .Button-module__btn.Button-module__gray:focus { background: none; }
+.ModalLayout-module__modal .Button-module__btn.Button-module__accent {
+  flex: 1; background: var(--ember-fill); border-color: var(--ember-fill); color: #fff; border-radius: 999px;
+}
+.ModalLayout-module__modal .Button-module__btn.Button-module__accent:focus { background: var(--ember-fill); border-color: var(--ember-fill); }
+.ModalLayout-module__modal .Button-module__btn:focus-visible { outline: 2px solid var(--stone); outline-offset: 2px; }
+.ModalLayout-module__modal .Button-module__btn.Button-module__accent:focus-visible { outline: 2px solid #fff; outline-offset: -5px; }
+
+/* ---------- наведение: только там, где есть мышь (на телефоне красная цена не залипает) ---------- */
+@media (hover: hover) {
+  .Search-module__wrapper:hover { border-color: rgba(16, 35, 63, .22); }
+  .Search-module__wrapper:focus-within:hover { border-color: var(--stone-dim); }
+  .Categories-module__category:hover { color: var(--stone); }
+  .MonitoringServer-module__icon:hover { stroke: var(--ember); }
+  .hr-social__link:hover .hr-social__ico { background: var(--ember-fill); color: #fff; }
+  .hr-social__link:hover > .hr-i:last-child { color: var(--ember); transform: translateX(3px); }
+  .Product-module__wrapper:hover { --hr-hover: 1; }
+  .Product-module__favorite:hover { color: var(--ember); }
+  .hr-social__link:hover::after { transform: scaleX(1); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover { background: var(--obs); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .Product-module__img { transform: scale(1.04); }
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .hr-heat::before,
+  .Product-module__wrapper[data-hr-feat="portrait"]:hover .hr-heat > i:last-child { opacity: 1; }
+  .ShopFooter-module__link:hover { color: var(--stone); }
+  .hr-tools select:hover, .hr-tools input[type="text"]:hover, .hr-tools__toggle:hover { border-color: rgba(16, 35, 63, .26); }
+  .hr-seg span:hover, .hr-check:hover span, .hr-tools__reset:hover { color: var(--stone); }
+  .hr-promo__code:hover .hr-i, .hr-promo__go:hover .hr-i { color: var(--ember); }
+  .hr-promo__go:hover { color: var(--ember); }
+  .hr-nores__reset:hover { background: #2b7cff; }
+  .CountSelector-module__changeCountBtn:hover { background: var(--slab-2); color: var(--stone); }
+  .ModalLayout-module__modal .Button-module__btn.Button-module__gray:hover { border-color: var(--stone-mute); color: var(--stone); background: none; }
+  .ModalLayout-module__modal .Button-module__btn.Button-module__accent:hover { background: #2b7cff; border-color: #2b7cff; }
+}
+
+/* ---------- подвал и мелочи ---------- */
+.DesktopCopyright-module__wrapper { background: var(--slab); color: var(--stone-mute); border: 1px solid var(--line); }
+.DesktopCopyright-module__link { color: var(--stone-dim); }
+.hr-toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 9999; max-width: calc(100% - 32px);
+  padding: 14px 18px; background: var(--slab-2); border-left: 2px solid var(--ember);
+  font: 500 14px/1.4 var(--ui); color: var(--stone);
+  transform: translate(-50%, 12px); opacity: 0; visibility: hidden; transition: opacity .3s, transform .4s var(--ease), visibility 0s .4s;
+}
+.hr-toast.is-on { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .3s, transform .4s var(--ease); }
+:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+  /* без движения: искр нет, иконка не подпрыгивает, плитка не проседает; цена и трещина остаются состоянием */
+  .hr-heat { display: none; }
+  .Product-module__img { translate: none; }
+  .Product-module__wrapper:active, .Product-module__wrapper[data-hr-feat]:active { transform: none; }
+}
+
+/* ---------- плита с бонусами: раньше в столбик, потом 2×2 ---------- */
+@media (max-width: 1100px) {
+  .hr-plate { grid-template-columns: 1fr; }
+  .hr-plate__addr { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 820px) {
+  .hr-steps { grid-auto-flow: row; grid-template-columns: 1fr 1fr; gap: 14px 0; }
+  .hr-steps .hr-step:nth-child(odd) { padding-left: 0; border-left: 0; }
+}
+
+/* ---------- шторка меню (бургер): вход, язык и левая колонка ---------- */
+.PlayerMenuMobile-module__menu {
+  background: var(--grain), var(--obs); border-left: 1px solid var(--line-2); color: var(--stone); box-shadow: none;
+}
+.PlayerMenuMobile-module__header {
+  display: flex; align-items: center; justify-content: space-between; height: 60px; padding: 0 16px; margin: 0;
+  background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  font: 400 18px/1 var(--display); color: var(--stone);
+}
+.PlayerMenuMobile-module__header .CrosseCloseBtn-module__line { background: var(--stone-dim); }
+.PlayerMenuMobile-module__body { padding: 20px 16px max(28px, env(safe-area-inset-bottom)); background: none; overscroll-behavior: contain; }
+.PlayerMenuMobile-module__playerMenu { display: grid; grid-template-columns: auto 1fr; gap: 10px; margin: 0; }
+.PlayerMenuMobile-module__playerMenu > * { margin: 0; }
+.PlayerMenuMobile-module__langSwitcher .LangSwitcher-module__btn {
+  height: 44px; min-width: 56px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 0; background: none;
+}
+.PlayerMenuMobile-module__loginLink {
+  display: grid; place-items: center; height: 44px; padding: 0 16px; border: 0; border-radius: 999px;
+  background: var(--ember-fill); font: 700 14px/1 var(--ui); color: #fff; text-decoration: none;
+}
+.PlayerMenuMobile-module__nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 18px 0 0; padding: 0; }
+.PlayerMenuMobile-module__nav .HeaderNav-module__link { padding: 6px 0; }
+.hr-drawer { display: flex; flex-direction: column; gap: 32px; margin-top: 32px; text-align: left; }
+.hr-mon-wrap { order: 2; }
+:root:not(.hr-drawer-on) .hr-drawer { display: none; }
+.hr-drawer .boxHeader { padding: 0; background: none; border: 0; border-radius: 0; }
+.hr-drawer > section { margin: 0; padding: 0; background: none; border: 0; }
+/* сервер в шторке: зеркало мониторинга */
+.hr-mon { display: flex; flex-direction: column; }
+.hr-mon__row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.hr-mon__row + .hr-mon__row { border-top: 1px solid var(--line); }
+.hr-mon__name { font: 600 14px/1.3 var(--ui); color: var(--stone-dim); }
+.hr-mon__n { font: 400 20px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone); white-space: nowrap; }
+.hr-mon__n i { margin: 0 6px; font-style: normal; color: var(--stone-mute); }
+/* пока колонка в шторке, внизу страницы её нет */
+.hr-drawer-on .Index-module__wrapper > .Widgets-module__wrapper { display: none; }
+
+/* ---------- узкий десктоп: обычных 4 в ряд ---------- */
+@media (max-width: 1199px) {
+  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 15; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 112px; }
+}
+
+/* ---------- планшет ---------- */
+@media (max-width: 960px) {
+  /* баннер: кадр 16:9 целиком, сразу под шапкой. Лицо демона и надпись занимают почти всю ширину арта,
+     поэтому любой более узкий кадр что-то режет. Плита только чуть заходит на землю внизу кадра */
+  .container.bannerContainer { --hr-head: 69px; padding: var(--hr-head) 0 0; background: var(--obs); }
+  .Banner-module__img { height: auto; aspect-ratio: 16 / 9; object-position: center; }
+  .bannerContainer::after { top: var(--hr-head); background: linear-gradient(0deg, var(--obs) 0, rgba(234, 244, 255, .6) 8%, rgba(234, 244, 255, 0) 22%); }
+  .hr-embers { top: var(--hr-head); height: auto; bottom: 0; }
+  .hr-plate { margin-top: -24px; }
+  .Index-module__wrapper { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; margin-top: 48px; }
+  .Index-module__wrapper .Shop-module__header { grid-column: 1; grid-row: 1; margin-bottom: 20px; font-size: 32px; }
+  .hr-tools { grid-column: 1; grid-row: 3; margin: 12px 0 16px; flex-wrap: wrap; }
+  .hr-tools { flex-wrap: wrap; }
+  .hr-sort { flex: 1 1 0; min-width: 0; }
+  .hr-sort__select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+  .hr-tools__toggle { flex: none; }
+  .hr-tools__toggle { display: inline-flex; }
+  .hr-tools[data-active] .hr-tools__toggle { border-color: var(--ember); }
+  .hr-filters { display: none; flex: 1 1 100%; padding: 14px; border: 1px solid var(--line-2); background: var(--grain), var(--slab); }
+  .hr-tools.is-open .hr-filters { display: flex; }
+  .hr-tools select, .hr-tools input[type="text"] { font-size: 16px; } /* iOS не зумит страницу */
+  .Shop-module__wrapper .Search-module__wrapper { grid-column: 1; grid-row: 2; margin-bottom: 0; }
+  /* категории: лента в одну строку, листается вбок, прилипает под шапкой */
+  .Categories-module__categories {
+    grid-column: 1; grid-row: 4; top: 60px; flex-wrap: nowrap; gap: 0 22px;
+    /* только вбок: если лента прокручивается и по вертикали (хоть на 1 px), телефон отдаёт ей часть
+       вертикального свайпа и подписи дёргаются вверх-вниз */
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+    margin: 0 -24px; padding: 4px 24px 0; border-bottom-color: var(--line);
+  }
+  .Categories-module__categories::-webkit-scrollbar { display: none; }
+  .Categories-module__category { gap: 6px; padding: 14px 0 13px; }
+  .Categories-module__category::before { bottom: 0; }
+  .Shop-module__wrapper .Products-module__wrapper { grid-column: 1; grid-row: 5; margin-top: 8px; }
+  .Shop-module__wrapper .errorMessage { grid-column: 1; grid-row: 5; margin-top: 32px; }
+  .Shop-module__wrapper > .boxFooter { grid-column: 1; grid-row: 7; margin-top: 48px; grid-template-columns: 1fr; }
+  .Index-module__wrapper > .Widgets-module__wrapper, .hr-stick .Index-module__wrapper > .Widgets-module__wrapper {
+    grid-column: 1; grid-row: 6; position: static; margin-top: 56px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px;
+  }
+}
+
+/* ---------- телефон ---------- */
+@media (max-width: 600px) {
+  .container, .Header-module__wrapper { padding: 0 16px; }
+  .Header-module__wrapper { height: 60px; gap: 12px; }
+  /* на телефоне название уже есть в самом лого, текст прячем */
+  .Header-module__logo { font-size: 0; gap: 0; }
+  .Header-module__logo::before { width: 40px; height: 40px; }
+  .Header-module__wrapper { justify-content: space-between; }
+  .hr-connect { padding: 10px 14px; margin-right: 8px; }
+  .container.bannerContainer { --hr-head: 61px; }
+  .hr-plate { width: calc(100% - 32px); margin-top: -16px; border-radius: 18px; }
+  .hr-plate__addr, .hr-plate__bonus { padding: 18px 16px; }
+  .hr-step { flex-direction: column; align-items: flex-start; gap: 6px; padding-right: 10px; min-width: 0; }
+  .hr-step + .hr-step { padding-left: 14px; }
+  .hr-steps .hr-step:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .hr-step b { font-size: 24px; }
+  .hr-step span { font-size: 12px; }
+
+  .Index-module__wrapper { margin-top: 40px; padding-bottom: 72px; }
+  .Index-module__wrapper .Shop-module__header { font-size: 28px; margin-bottom: 16px; }
+  .Search-module__wrapper { height: 48px; }
+  .Categories-module__categories { margin: 0 -16px; padding: 4px 16px 0; gap: 0 20px; }
+  .Shop-module__wrapper .Products-module__wrapper { margin: 8px -16px 0; }
+  .Products-module__wrapper > .Product-module__wrapper { grid-column: span 20; }
+  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="portrait"] { grid-column: span 30; }
+  .Products-module__wrapper > .Product-module__wrapper[data-hr-feat="item"] { grid-column: span 60; }
+  .Shop-module__wrapper .errorMessage { font-size: 14px; }
+  .Shop-module__wrapper .errorMessage::first-line { font-size: 20px; }
+  /* заголовок группы: число и цены своей строкой */
+  .hr-group { flex-wrap: wrap; row-gap: 6px; padding: 36px 16px 12px; }
+  .hr-group--top { padding-top: 16px; }
+  .hr-group__name { font-size: 20px; }
+  .hr-group__rule { display: none; }
+  .hr-group__meta { flex-basis: 100%; font-size: 12px; white-space: normal; }
+  .Product-module__wrapper { padding: 10px 10px 12px; }
+  .Product-module__img { width: 76px; max-width: 80%; margin: 12px 0 10px; }
+  .Product-module__name, .Product-module__wrapper:hover .Product-module__name { font-size: 12px; }
+  .Product-module__price { margin-top: 0; font-size: 15px; }
+  .Product-module__name, .Product-module__wrapper:hover .Product-module__name { margin-top: 4px; }
+  .Product-module__count, .Product-module__wrapper:hover .Product-module__count { top: 8px; right: 8px; font-size: 11px; }
+  .Product-module__discount { top: 8px; left: 10px; font-size: 12px; }
+  .Index-module__wrapper > .Widgets-module__wrapper, .hr-stick .Index-module__wrapper > .Widgets-module__wrapper { grid-template-columns: 1fr; gap: 28px; }
+
+  /* витрина на телефоне: привилегии по две, наборы и кейсы строкой, картинка слева */
+  .Product-module__wrapper[data-hr-feat="portrait"] { padding: 14px; }
+  .Product-module__wrapper[data-hr-feat] .Product-module__price { font-size: 16px; margin-top: 6px; }
+  .Product-module__wrapper[data-hr-feat] .Product-module__discount { top: 10px; left: auto; right: 10px; font-size: 12px; padding: 5px 6px 4px; }
+  .Product-module__wrapper[data-hr-feat="item"] {
+    grid-template-columns: 84px minmax(0, 1fr); grid-template-areas: "img name" "img price";
+    align-content: center; column-gap: 16px; padding: 14px 16px;
+  }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__img { width: 84px; margin: 0; align-self: center; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__name { align-self: end; font-size: 18px; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__price { align-self: start; }
+  .Product-module__wrapper[data-hr-feat="item"] .Product-module__discount { top: 50%; bottom: auto; left: auto; right: 16px; transform: translateY(-50%); }
+  .hr-modal-portrait .productModalImg { width: calc(100% + 32px); height: 220px; margin: 4px -16px 16px; }
+
+  /* окно покупки снизу во всю ширину */
+  .ModalLayout-module__positionWrapper { align-items: flex-end; padding: 0; }
+  .ModalLayout-module__modal, .ProductModal-module__item, .ProductModal-module__bp, .ProductModal-module__command, .ProductModal-module__dropdown { width: 100%; }
+  .ModalLayout-module__modal { border-left: 0; border-right: 0; border-bottom: 0; }
+  .ModalLayout-module__modal > .boxHeader { padding: 22px 16px 0; font-size: 22px; }
+  .ModalLayout-module__modal > .boxBody { padding: 4px 16px 20px; }
+  .ModalLayout-module__modal > .boxFooter { padding: 0 16px max(20px, env(safe-area-inset-bottom)); }
+  .productModalImg { height: 160px; margin: 4px 0 16px; }
+  .productModalFormRow { grid-template-columns: 1fr 1fr; gap: 12px; }
+}
+
+/* самые узкие телефоны: адрес сервера целиком вместе со значком */
+@media (max-width: 359px) {
+  .hr-plate__ip { padding: 13px 18px; }
+}
+
+/* ---------- вкладки «Статистика» и «Баны» (рисует custom.js на главной по /#stats и /#bans) ---------- */
+.hr-i--search { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/search.svg"); }
+/* выбранная вкладка в шапке: светлая, снизу раскалённая линия, как у выбранной категории */
+.Header-module__nav { gap: 0 28px; }
+.HeaderNav-module__link[data-hr-on] { color: var(--stone); }
+.Header-module__nav .HeaderNav-module__link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 14px; height: 2px;
+  background: var(--ember); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease);
+}
+.Header-module__nav .HeaderNav-module__link[data-hr-on]::after { transform: scaleX(1); }
+.PlayerMenuMobile-module__nav .HeaderNav-module__link[data-hr-on] { box-shadow: inset 0 -2px 0 var(--ember); }
+
+.hr-page-on .Index-module__wrapper > .Shop-module__wrapper,
+.hr-page-on .Index-module__wrapper > .Widgets-module__wrapper { display: none; }
+.hr-page { grid-column: 1 / -1; grid-row: 1; min-width: 0; }
+.hr-page__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; margin: 0 0 28px; }
+.hr-page__title { margin: 0; font: 400 40px/1 var(--display); letter-spacing: -.01em; color: var(--stone); }
+.hr-page__sub { margin: 0; font: 500 14px/1.4 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); }
+.hr-page__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 0 0 24px; font: 600 14px/1 var(--ui); }
+.hr-page__tools .hr-seg { height: 44px; box-sizing: border-box; border: 1px solid var(--line-2); background: var(--grain), var(--slab); }
+.hr-page__tools .hr-seg span { height: 42px; }
+.hr-page__search {
+  position: relative; display: flex; align-items: center; flex: 0 1 340px; min-width: 0; height: 44px; box-sizing: border-box;
+  background: var(--grain), var(--slab); border: 1px solid var(--line-2);
+  border-radius: 18px; transition: border-color .2s;
+}
+.hr-page__search:focus-within { border-color: var(--stone-dim); }
+.hr-page__search .hr-i { margin: 0 0 0 14px; color: var(--stone-mute); }
+.hr-page__search:focus-within .hr-i { color: var(--ember); }
+.hr-page__search input {
+  flex: 1; min-width: 0; height: 100%; padding: 0 14px 0 10px; border: 0; outline: 0; background: none;
+  font: 500 15px/1 var(--ui); color: var(--stone);
+}
+.hr-page__search input::placeholder { color: var(--stone-mute); opacity: 1; }
+.hr-page__search input::-webkit-search-cancel-button { filter: invert(.7); }
+
+.hr-table { width: 100%; border-collapse: collapse; font: 500 14px/1.3 var(--ui); color: var(--stone-dim); }
+.hr-table th {
+  padding: 0 16px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line-2);
+  font: 600 12px/1 var(--ui); letter-spacing: .02em; color: var(--stone-mute);
+}
+.hr-table td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.hr-table th:first-child, .hr-table td:first-child { padding-left: 0; }
+.hr-table th:last-child, .hr-table td:last-child { padding-right: 0; }
+.hr-table .hr-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hr-table th.is-on { color: var(--stone); box-shadow: inset 0 -2px 0 var(--ember); }
+.hr-table td.is-on { color: var(--stone); font-weight: 700; }
+.hr-c-rank { width: 3ch; font: 400 15px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone-mute); }
+.hr-table th.hr-c-rank { font: 600 12px/1 var(--ui); }
+.hr-table tr.is-top .hr-c-rank { color: var(--ember); }
+.hr-c-name b { display: block; font: 600 15px/1.25 var(--ui); color: var(--stone); overflow-wrap: anywhere; }
+.hr-c-name span { display: block; margin-top: 3px; font: 500 12px/1.2 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); }
+.hr-c-term { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--stone); }
+.hr-c-term.is-perm { color: var(--ember); font-weight: 700; }
+.hr-c-at { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hr-c-reason { color: var(--stone); }
+.hr-table--bans tr.is-over .hr-c-name b, .hr-table--bans tr.is-over .hr-c-reason, .hr-table--bans tr.is-over .hr-c-term { color: var(--stone-dim); }
+@media (hover: hover) { .hr-table tbody tr:hover td { background: rgba(16, 35, 63, .025); } }
+
+.hr-page__empty { margin: 8px 0 0; font: 500 15px/1.5 var(--ui); color: var(--stone-dim); }
+.hr-page__more {
+  display: block; margin: 24px auto 0; height: 44px; padding: 0 24px; cursor: pointer;
+  border: 1px solid var(--line-2); background: var(--grain), var(--slab); font: 600 14px/1 var(--ui); color: var(--stone);
+}
+.hr-page__more[hidden], .hr-page__note[hidden] { display: none; }
+.hr-page__note { margin: 20px 0 0; font: 500 13px/1.5 var(--ui); color: var(--stone-mute); }
+.hr-page__more:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+@media (hover: hover) { .hr-page__more:hover { border-color: var(--stone-dim); } }
+
+@media (max-width: 960px) {
+  .hr-page { grid-row: 1; }
+  .hr-page__title { font-size: 32px; }
+  /* статистика: место, игрок, выбранный показатель и ещё один (убийства или K/D) */
+  .hr-table--stats .hr-num:not(.is-on):not(.is-alt) { display: none; }
+}
+@media (max-width: 600px) {
+  .hr-page__title { font-size: 28px; }
+  .hr-page__head { margin-bottom: 20px; }
+  .hr-page__search { flex: 1 1 100%; }
+  .hr-page__tools .hr-seg { width: 100%; }
+  .hr-page__tools .hr-seg label { flex: 1; }
+  .hr-page__tools .hr-seg span { width: 100%; justify-content: center; padding: 0 8px; }
+  .hr-table th, .hr-table td { padding-left: 10px; padding-right: 10px; }
+  /* баны: строка таблицы становится карточкой — ник, причина, потом срок, дата и админ мелко */
+  .hr-table--bans thead { display: none; }
+  .hr-table--bans, .hr-table--bans tbody { display: block; }
+  .hr-table--bans tr { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .hr-table--bans td { display: block; padding: 0; border: 0; }
+  .hr-table--bans .hr-c-name, .hr-table--bans .hr-c-reason { flex: 1 1 100%; }
+  .hr-table--bans .hr-c-reason { margin: 4px 0 2px; }
+  .hr-table--bans .hr-c-at, .hr-table--bans .hr-c-admin { font-size: 13px; color: var(--stone-mute); }
+  .hr-table--bans .hr-c-admin::before { content: "админ "; }
+  .hr-table--bans .hr-c-at::before { content: "выдан "; }
+}
+div.hr-social__link { cursor: default; }
+
+/* фильтры выключены в HR.filters: остаются поиск и сортировка */
+.hr-tools--sort-only .hr-tools__toggle, .hr-tools--sort-only .hr-filters { display: none !important; }
+/* на витрине скидка справа, звезда избранного остаётся на своём месте слева */
+.Product-module__wrapper[data-hr-feat] .Product-module__favoriteWithDiscount { top: 4px; }
+
+/* ---------- окно услуги с плюшками и наборами (HR.perks) ---------- */
+.ModalLayout-module__modal.hr-modal-perks { width: min(900px, calc(100vw - 48px)); }
+.hr-modal-perks > .boxBody {
+  display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); column-gap: 28px; align-items: start;
+  max-height: calc(100vh - 200px); overflow-y: auto; overscroll-behavior: contain;
+}
+.hr-modal-perks > .boxBody > * { grid-column: 1 / -1; }
+.hr-modal-perks.hr-modal-portrait .productModalImg {
+  grid-column: 1; grid-row: 1; width: 100%; height: auto; aspect-ratio: 3 / 4; margin: 8px 0 22px;
+}
+.hr-modal-perks > .boxBody > .hr-perks { grid-column: 2; grid-row: 1; margin: 8px 0 22px; }
+.hr-perks__list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.hr-perk {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  min-height: 52px; padding: 8px 14px; background: var(--obs);
+}
+.hr-perk__text { display: grid; gap: 2px; min-width: 0; }
+.hr-perk__name { font: 600 14px/1.3 var(--ui); color: var(--stone); }
+.hr-perk__note { font: 500 12px/1.3 var(--ui); color: var(--stone-mute); }
+.hr-perk__val {
+  padding: 6px 9px 5px; background: var(--slab-2); color: var(--ember); white-space: nowrap;
+  font: 400 14px/1 var(--display); font-variant-numeric: tabular-nums;
+  border-radius: 8px;
+}
+.hr-kits { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+.hr-kits__title { margin: 0 0 16px; font: 400 18px/1.2 var(--display); color: var(--stone); }
+.hr-kit + .hr-kit { margin-top: 20px; }
+.hr-kit__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.hr-kit__name { font: 600 15px/1.3 var(--ui); color: var(--stone); }
+.hr-kit__every {
+  padding: 5px 8px 4px; background: var(--ember-fill); color: #fff; white-space: nowrap; font: 400 12px/1 var(--display);
+  border-radius: 8px;
+}
+.hr-kit__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.hr-kit__item { position: relative; aspect-ratio: 1; display: grid; place-items: center; background: var(--obs); }
+.hr-kit__item img { width: 68%; height: 68%; object-fit: contain; }
+.hr-kit__noimg { padding: 6px; text-align: center; font: 500 11px/1.25 var(--ui); color: var(--stone-dim); }
+.hr-kit__qty {
+  position: absolute; right: 6px; bottom: 5px; font: 400 12px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stone-dim);
+}
+@media (max-width: 600px) {
+  .ModalLayout-module__modal.hr-modal-perks { width: 100%; }
+  .hr-modal-perks > .boxBody { display: block; max-height: calc(100vh - 170px); }
+  .hr-modal-perks.hr-modal-portrait .productModalImg { width: calc(100% + 32px); height: 220px; aspect-ratio: auto; margin: 4px -16px 16px; }
+  .hr-perks { margin: 0 0 18px; }
+  .hr-kit__grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+}
+
+/* плюшки взяты из описания товара: исходный текст описания не показываем */
+.hr-modal-about .productModalDescription { display: none !important; }
+
+
+/* «Скопировать IP» в шапке: «Скопировано» → адрес. Текст сменяется снизу вверх */
+.hr-i--bell { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/bell-ringing.svg"); }
+.hr-i--check { --i: url("https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/check.svg"); }
+.hr-connect { overflow: hidden; justify-content: center; }
+.hr-copy__face { display: inline-flex; align-items: center; gap: 8px; }
+.hr-copy__face .hr-i { width: 16px; height: 16px; color: #fff; }
+.hr-copy__face.is-in { animation: hr-face-in .32s var(--ease) both; }
+@keyframes hr-face-in { from { opacity: 0; transform: translateY(60%); } to { opacity: 1; transform: none; } }
+.hr-connect[data-state="ip"] .hr-copy__txt { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+@media (prefers-reduced-motion: reduce) { .hr-copy__face.is-in { animation: none; } }
+
+/* кнопка уведомлений о рейдах в плашке под баннером */
+.hr-plate__ip { justify-content: center; text-decoration: none; }
+@media (max-width: 600px) { .hr-plate__ip { width: 100%; } }
+/* телефон: адрес в шапке длиннее надписи, ужимаем его, чтобы шапка не переносилась на вторую строку */
+.hr-connect { white-space: nowrap; }
+@media (max-width: 600px) {
+  .hr-connect[data-state="ip"] { padding-left: 10px; padding-right: 10px; }
+  .hr-connect[data-state="ip"] .hr-copy__txt { font-size: 12px; letter-spacing: 0; }
+}
+
+/* «Поддержка» (тикеты GameStores) в шапке: как остальные пункты */
+.SupportLink-module__link {
+  position: relative; padding: 24px 0; text-transform: none; letter-spacing: 0; text-decoration: none;
+  font: 600 14px/1 var(--ui); color: var(--stone-dim); transition: color .2s;
+}
+@media (hover: hover) { .SupportLink-module__link:hover { color: var(--stone); } }
+
+/* окно пополнения баланса: «Закрыть» и «Пополнить» не впритык */
+.PlayerBalanceModal-module__footer { gap: 12px; }
+
+
+/* ================= слой «мягкое небо» ================= */
+:root, :root[data-theme] {
+  --grain: none;
+  --line: rgba(16, 35, 63, .08);
+  --line-2: rgba(16, 35, 63, .12);
+  --cloud: 0 1px 2px rgba(30, 80, 160, .06), 0 8px 24px -8px rgba(30, 80, 160, .18);
+  --cloud-up: 0 2px 4px rgba(30, 80, 160, .08), 0 18px 40px -12px rgba(30, 80, 160, .28);
+}
+html { background: #eaf4ff; }
+body {
+  background:
+    radial-gradient(60% 480px at 85% 620px, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(50% 420px at 10% 1100px, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #d9ebff 0, #eaf4ff 900px, #f4f9ff 100%);
+}
+/* шапка после прокрутки — матовое стекло */
+.hr-scrolled .headerContainer { background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+/* лого — скруглённый квадрат, не таблетка */
+.Header-module__logo::before { border-radius: 12px; }
+
+/* плиты и карточки: белые облака с мягкой тенью вместо рамок */
+.hr-plate, .hr-promo, .Search-module__wrapper, .Product-module__wrapper, .ModalLayout-module__modal {
+  border-color: transparent !important; box-shadow: var(--cloud);
+}
+.hr-plate { border-radius: 24px; }
+.Product-module__wrapper { border-radius: 18px; transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+@media (hover: hover) {
+  .Product-module__wrapper:hover { transform: translateY(-3px); box-shadow: var(--cloud-up); }
+}
+.hr-plate::before { border-radius: 24px 24px 0 0; opacity: .6; }
+
+/* кнопки-таблетки с мягкой тенью цвета неба */
+.hr-connect, .hr-copy__face, .ModalLayout-module__modal .Button-module__btn.Button-module__accent {
+  box-shadow: 0 6px 16px -6px rgba(42, 122, 240, .55);
+}
+/* затемнение баннера: вместо тёмного — растворение в небо */
+.bannerContainer::after {
+  background: linear-gradient(0deg, #eaf4ff 0, rgba(234, 244, 255, .7) 12%, rgba(234, 244, 255, 0) 40%);
+}
+.headerContainer { background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)); }
+
+/* заголовки Unbounded: чуть плотнее межбуквенно, он широкий */
+h1, h2, h3 { letter-spacing: -.01em; }
+
+/* остатки квадратов: поля, селект сортировки, кнопки шаблона, полоса категорий */
+.Button-module__btn, .ModalLayout-module__modal input, .ModalLayout-module__modal button,
+select, [class*="Select-module__"], [class*="Sort"], [class*="Counter-module__"], [class*="Input-module__"] { border-radius: 14px; }
+.Categories-module__categories {
+  border: 0; border-radius: 18px; box-shadow: var(--cloud); background: rgba(255, 255, 255, .92);
+  padding: 6px 18px; gap: 0 22px; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+/* арт баннера под магазином: в тёмной теме приглушён до серого, здесь — светлое размытое небо */
+.Index-module__wrapper::before { filter: saturate(.8) brightness(1.1) blur(2px); opacity: .28; }
+.hr-plate__ip { white-space: nowrap; }
+/* у этих база ставит border-radius: 0 более точным селектором */
+.hr-tools select, .hr-sort__select, .hr-tools__toggle, .hr-tools__reset,
+.Widgets-module__wrapper .MonitoringWidget-module__updateBtn.Button-module__btn,
+.ModalLayout-module__modal .Button-module__btn { border-radius: 14px !important; }
+
+/* шапка над баннером: белые буквы с лёгкой тенью, после прокрутки — тёмно-синие */
+/* только ПК-шапка: в мобильном меню (PlayerMenuMobile) фон светлый, там белое не нужно */
+@media (min-width: 961px) {
+  html:not(.hr-scrolled) .Header-module__wrapper > .Header-module__logoWrapper .Header-module__logo,
+  html:not(.hr-scrolled) .Header-module__wrapper > .HeaderNav-module__wrapper .HeaderNav-module__link { color: #fff; text-shadow: 0 1px 10px rgba(10, 40, 90, .45); }
+  html:not(.hr-scrolled) .Header-module__wrapper .PlayerMenu-module__loginLink,
+  html:not(.hr-scrolled) .Header-module__wrapper .LangSwitcher-module__btn,
+  html:not(.hr-scrolled) .Header-module__wrapper .LangSwitcher-module__currentLang { color: #fff; border-color: rgba(255, 255, 255, .55); text-shadow: 0 1px 10px rgba(10, 40, 90, .45); }
+}
+[class*="PlayerMenuMobile"] *, [class*="PlayerMenuMobile"] { text-shadow: none; }
+[class*="PlayerMenuMobile"] button, [class*="PlayerMenuMobile"] a[class*="Button"], [class*="Lang"] { border-radius: 14px; }
+
+/* карточки услуг: светлая заглушка, снизу растворение в белое */
+:root { --hr-ph: "https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@f8ee335/sky/placeholder-light.jpg"; }
+
+/* линия-трещина сверху плиты: прямая полоса поверх скруглённых углов — убрана */
+.hr-plate::before { display: none; }
+
+/* карточки товаров: в тёмной теме стык 2px, здесь облака с зазором */
+/* сетка на 60 колонок: gap умножится на 59, поэтому зазор — полями у карточек, края выравниваем минусом */
+.Shop-module__wrapper .Products-module__wrapper { gap: 0; margin: -5px !important; }
+.Shop-module__wrapper .Products-module__wrapper > .Product-module__wrapper { margin: 5px; }
+/* подвал: скруглённая плита, без полоски-градиента сверху */
+.Shop-module__wrapper > .boxFooter { border: 0; border-image: none; border-radius: 18px; box-shadow: var(--cloud); }
+/* переключатели в «Банах»/«Статистике», «Войти», поиск разделов — таблетки */
+.hr-seg { border-radius: 999px; overflow: hidden; }
+.hr-page__tools .hr-seg { border-radius: 999px; }
+.PlayerMenu-module__loginLink, .hr-page__search, .hr-page__search input { border-radius: 999px; }
+@media (max-width: 960px) { .Shop-module__wrapper .Products-module__wrapper { margin: 8px -5px 0 !important; } }
+.LangSwitcher-module__btn, .PlayerMenuMobile-module__playerMenu button { border-radius: 14px !important; }
+
+/* цвета привилегий задаёт клиент в описании (GOD жёлтый и т.п.) — цвет не трогаем,
+   а плашку значения делаем тёмно-синей, чтобы жёлтый/зелёный читались на светлом */
+.hr-perk__val[style] { background: #10233f; }
