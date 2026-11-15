@@ -1,4 +1,4 @@
-/* HELL RUST — стили поверх стандартного шаблона GameStores.
+/* SKY RUST — стили поверх стандартного шаблона GameStores.
    Вставляется в «Внешний вид → Продвинутая конфигурация → CSS».
    Идея: обсидиан и трещина. Камень, острые сколы, один цвет лавы
    только там, где он что-то значит (цена, выбранное, кнопка).
@@ -6,33 +6,33 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Onest:wght@400;500;600;700;800&display=swap');
 
-:root {
+:root, :root[data-theme] { /* [data-theme] — иначе тема шаблона (Red Black) перебивает акцент */
   /* переменные шаблона */
   --default-font-family: "Onest";
-  --accent-color-800: #d4230e;
-  --accent-color-900: #a91a09;
-  --font-color-700: #ebe5df;
-  --font-color-800: #a39a94;
-  --font-color-900: #8a817c;
-  --bg-color-700: #1c1716;
-  --bg-color-800: #151110;
-  --bg-color-900: #0d0a09;
-  --monitoring-joining-color: #ff4526;
-  --monitoring-queue-color: #a91a09;
-  --product-items-trans-bg-color: rgba(13, 10, 9, .7);
-  --promocode-bg-color: #151110;
+  --accent-color-800: #1a6cf0;
+  --accent-color-900: #1452c4;
+  --font-color-700: #e8f0fb;
+  --font-color-800: #a2b2c8;
+  --font-color-900: #8697b0;
+  --bg-color-700: #13203a;
+  --bg-color-800: #0c1527;
+  --bg-color-900: #070d19;
+  --monitoring-joining-color: #4aa3ff;
+  --monitoring-queue-color: #1452c4;
+  --product-items-trans-bg-color: rgba(7, 13, 25, .7);
+  --promocode-bg-color: #0c1527;
 
   /* свои */
-  --obs: #0d0a09;
-  --slab: #151110;
-  --slab-2: #1c1716;
-  --line: rgba(235, 229, 223, .08);
-  --line-2: rgba(235, 229, 223, .14);
-  --stone: #ebe5df;
-  --stone-dim: #a39a94;
-  --stone-mute: #8a817c;   /* 5.2:1 на обсидиане, 4.9:1 на карточке */
-  --ember: #ff4526;        /* текст и линии на тёмном */
-  --ember-fill: #d4230e;   /* заливка под белым текстом */
+  --obs: #070d19;
+  --slab: #0c1527;
+  --slab-2: #13203a;
+  --line: rgba(232, 240, 251, .08);
+  --line-2: rgba(232, 240, 251, .14);
+  --stone: #e8f0fb;
+  --stone-dim: #a2b2c8;
+  --stone-mute: #8697b0;   /* 5.2:1 на обсидиане, 4.9:1 на карточке */
+  --ember: #4aa3ff;        /* текст и линии на тёмном */
+  --ember-fill: #1a6cf0;   /* заливка под белым текстом */
   --display: "Dela Gothic One", "Onest", sans-serif;
   --ui: "Onest", system-ui, sans-serif;
   --chip: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
@@ -51,7 +51,7 @@ body {
   font-family: var(--ui);
   color: var(--stone);
   background:
-    radial-gradient(70% 520px at 50% 0, rgba(212, 35, 14, .16), rgba(212, 35, 14, 0) 70%),
+    radial-gradient(70% 520px at 50% 0, rgba(26, 108, 240, .16), rgba(26, 108, 240, 0) 70%),
     var(--obs);
   -webkit-font-smoothing: antialiased;
 }
@@ -72,10 +72,10 @@ body {
 /* шапка лежит поверх баннера прозрачной и твердеет после прокрутки (класс ставит custom.js) */
 .headerContainer {
   order: -1; position: fixed; top: 0; left: 0; right: 0; z-index: 50; max-width: none; padding: 0;
-  background: linear-gradient(180deg, rgba(13, 10, 9, .7), rgba(13, 10, 9, 0));
+  background: linear-gradient(180deg, rgba(7, 13, 25, .7), rgba(7, 13, 25, 0));
   border-bottom: 1px solid transparent; transition: background .35s, border-color .35s;
 }
-.hr-scrolled .headerContainer { background: var(--grain), rgba(13, 10, 9, .97); border-bottom-color: var(--line); }
+.hr-scrolled .headerContainer { background: var(--grain), rgba(7, 13, 25, .97); border-bottom-color: var(--line); }
 .Header-module__wrapper {
   max-width: 1240px; margin: 0 auto; padding: 0 24px; box-sizing: border-box;
   height: 68px; background: transparent; gap: 32px;
@@ -110,7 +110,7 @@ body {
   font: 700 14px/1 var(--ui); color: #fff; background: var(--ember-fill);
   transition: background .2s, transform .15s var(--ease);
 }
-@media (hover: hover) { .hr-connect:hover { background: #e52a12; } }
+@media (hover: hover) { .hr-connect:hover { background: #2b7cff; } }
 .hr-connect:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
 .hr-connect:active { transform: scale(.97); }
 
@@ -130,7 +130,7 @@ body {
 /* шаблон сначала рисует свой баннер «GAMESTORES.RU»: прячем картинку, пока не загрузился наш арт
    (data-hr-ready ставит custom.js по событию load), и только потом проявляем */
 .Banner-module__img {
-  display: block; width: 100%; height: clamp(440px, 50vw, 760px); object-fit: cover; object-position: center 32%;
+  display: block; width: 100%; height: clamp(440px, 40vw, 760px); object-fit: cover; object-position: center 40%;
   border-radius: 0; visibility: hidden;
 }
 .Banner-module__img[data-hr-ready] { visibility: visible; animation: hr-settle 1.8s var(--ease) both; }
@@ -138,8 +138,8 @@ body {
 .bannerContainer::after {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(13, 10, 9, .55) 0, rgba(13, 10, 9, 0) 22%),
-    linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .85) 14%, rgba(13, 10, 9, 0) 46%);
+    linear-gradient(180deg, rgba(7, 13, 25, .55) 0, rgba(7, 13, 25, 0) 22%),
+    linear-gradient(0deg, var(--obs) 0, rgba(7, 13, 25, .85) 14%, rgba(7, 13, 25, 0) 46%);
 }
 .hr-embers { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; }
 @keyframes hr-settle { from { transform: scale(1.07); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -149,13 +149,13 @@ body {
   position: relative; z-index: 3; box-sizing: border-box;
   width: calc(100% - 48px); max-width: 1192px; margin: -96px auto 0;
   display: grid; grid-template-columns: auto 1fr; align-items: stretch;
-  background: var(--grain), rgba(21, 17, 16, .94); border: 1px solid var(--line);
+  background: var(--grain), rgba(12, 21, 39, .94); border: 1px solid var(--line);
   clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
   animation: hr-up 1s .35s var(--ease) both;
 }
 .hr-plate::before {
   content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 100%;
-  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(255, 69, 38, 0) 100%);
+  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(74, 163, 255, 0) 100%);
   transform-origin: left; animation: hr-crack 1.4s .8s var(--ease) both;
 }
 @keyframes hr-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -173,7 +173,7 @@ body {
 }
 .hr-plate__ip .hr-i { width: 18px; height: 18px; color: #fff; }
 .hr-plate__ip:active { transform: scale(.97); }
-@media (hover: hover) { .hr-plate__ip:hover { background: #e52a12; } }
+@media (hover: hover) { .hr-plate__ip:hover { background: #2b7cff; } }
 .hr-plate__ip:focus-visible { outline-offset: 4px; }
 .hr-plate__bonus { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 22px 28px; }
 .hr-steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
@@ -240,7 +240,7 @@ body {
   grid-column: 2; grid-row: 3; align-self: start; position: sticky; top: 68px; z-index: 5;
   display: flex; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: 0 24px;
   width: auto; margin: 0 0 24px; padding: 2px 0 0; border: 0; border-bottom: 1px solid var(--line-2);
-  background: rgba(13, 10, 9, .96);
+  background: rgba(7, 13, 25, .96);
 }
 /* три строки и больше: не липнет, иначе закрывает пол-экрана (считает custom.js) */
 .hr-cats-tall .Categories-module__categories { position: static; }
@@ -286,7 +286,7 @@ body {
 }
 .Widgets-module__wrapper .boxHeader::after, .hr-drawer .boxHeader::after {
   content: ""; flex: 1 1 auto; height: 1px; margin-top: 2px;
-  background: linear-gradient(90deg, var(--ember) 0, rgba(255, 69, 38, 0) 56px) no-repeat, var(--line);
+  background: linear-gradient(90deg, var(--ember) 0, rgba(74, 163, 255, 0) 56px) no-repeat, var(--line);
 }
 .MonitoringWidget-module__body { padding: 0; background: none; border: 0; }
 .Widgets-module__wrapper .errorMessage { display: block; width: auto; margin: 0; text-align: left; font: 500 14px/1.4 var(--ui); color: var(--stone-mute); }
@@ -449,7 +449,7 @@ body {
 /* линия заголовка начинается трещиной лавы, как верх плиты с адресом */
 .hr-group__rule {
   flex: 1 1 auto; height: 1px; align-self: center; margin-top: 4px;
-  background: linear-gradient(90deg, var(--ember) 0, rgba(255, 69, 38, 0) 96px) no-repeat, var(--line);
+  background: linear-gradient(90deg, var(--ember) 0, rgba(74, 163, 255, 0) 96px) no-repeat, var(--line);
 }
 .hr-group__meta { font: 500 13px/1.2 var(--ui); font-variant-numeric: tabular-nums; color: var(--stone-mute); white-space: nowrap; }
 
@@ -477,7 +477,7 @@ body {
   position: relative; width: auto; height: auto; aspect-ratio: auto; padding: 12px 14px 14px; overflow: hidden; cursor: pointer;
   display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "img" "price" "name";
   align-content: start;
-  background: var(--grain), linear-gradient(180deg, #2a1714 0, #1d1412 38%, #161110 72%, #141010 100%);
+  background: var(--grain), linear-gradient(180deg, #132a52 0, #10203f 38%, #0d1729 72%, #0b1425 100%);
   border-radius: 0; animation: none;
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
   transition: --hr-hover var(--t-out) linear, transform var(--t-press) var(--ease);
@@ -491,7 +491,7 @@ body {
 /* отсвет наведения: лава снизу, по трещине. Один псевдоэлемент, без фильтров */
 .Product-module__wrapper::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(0deg, rgba(212, 35, 14, .22) 0, rgba(212, 35, 14, .06) 40%, rgba(212, 35, 14, 0) 70%);
+  background: linear-gradient(0deg, rgba(26, 108, 240, .22) 0, rgba(26, 108, 240, .06) 40%, rgba(26, 108, 240, 0) 70%);
   opacity: var(--hr-glow);
 }
 .Product-module__wrapper > * { position: relative; z-index: 1; }
@@ -516,7 +516,7 @@ body {
 .Product-module__price {
   grid-area: price; position: relative; justify-self: start; display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
   min-width: 0; margin: 0 0 0 -7px; padding: 5px 7px; border-radius: 0;
-  background: rgb(212 35 14 / var(--hr-price));
+  background: rgb(26 108 240 / var(--hr-price));
   clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
   font: 400 17px/1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap;
   color: color-mix(in srgb, #fff calc(var(--hr-price) * 100%), var(--stone));
@@ -550,7 +550,7 @@ body {
 /* подвал магазина: юридический текст платформы, тихо под витриной */
 .Shop-module__wrapper > .boxFooter {
   grid-column: 2; grid-row: 6; margin-top: 64px; padding: 24px; border-top: 1px solid var(--line); background: var(--grain), var(--slab);
-  border-image: linear-gradient(90deg, var(--ember) 0, rgba(255, 69, 38, 0) 96px, var(--line) 96px) 1;
+  border-image: linear-gradient(90deg, var(--ember) 0, rgba(74, 163, 255, 0) 96px, var(--line) 96px) 1;
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 48px; align-items: start;
 }
 .ShopFooter-module__text { margin: 0; max-width: 62ch; text-align: left; font: 400 12px/1.5 var(--ui); color: var(--stone-mute); }
@@ -589,7 +589,7 @@ body {
 }
 .Product-module__wrapper[data-hr-feat="portrait"]::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 1;
-  background: var(--grain), linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .86) 26%, rgba(13, 10, 9, 0) 58%);
+  background: var(--grain), linear-gradient(0deg, var(--obs) 0, rgba(7, 13, 25, .86) 26%, rgba(7, 13, 25, 0) 58%);
 }
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__name,
 .Product-module__wrapper[data-hr-feat="portrait"] .Product-module__price { position: relative; z-index: 2; }
@@ -609,7 +609,7 @@ body {
 }
 .hr-heat::before {
   content: ""; position: absolute; inset: 0; opacity: 0;
-  background: radial-gradient(90% 38% at 50% 100%, rgba(255, 69, 38, .34), rgba(212, 35, 14, .1) 55%, rgba(212, 35, 14, 0) 100%);
+  background: radial-gradient(90% 38% at 50% 100%, rgba(74, 163, 255, .34), rgba(26, 108, 240, .1) 55%, rgba(26, 108, 240, 0) 100%);
   transition: opacity var(--t-slow) var(--ease);
 }
 .hr-heat > i {
@@ -628,26 +628,26 @@ body {
 /* дальние искры: мелкие, тусклые */
 .hr-heat > i:first-child::before {
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(255, 176, 120, .8) 0 .7px, rgba(255, 69, 38, .25) 1.4px, rgba(255, 69, 38, 0) 3px),
-    radial-gradient(circle at 31% 64%, rgba(255, 176, 120, .7) 0 .6px, rgba(255, 69, 38, .2) 1.3px, rgba(255, 69, 38, 0) 3px),
-    radial-gradient(circle at 47% 9%, rgba(255, 176, 120, .6) 0 .6px, rgba(255, 69, 38, .2) 1.2px, rgba(255, 69, 38, 0) 2.6px),
-    radial-gradient(circle at 58% 41%, rgba(255, 176, 120, .8) 0 .8px, rgba(255, 69, 38, .25) 1.5px, rgba(255, 69, 38, 0) 3.2px),
-    radial-gradient(circle at 71% 83%, rgba(255, 176, 120, .7) 0 .7px, rgba(255, 69, 38, .2) 1.4px, rgba(255, 69, 38, 0) 3px),
-    radial-gradient(circle at 86% 27%, rgba(255, 176, 120, .75) 0 .7px, rgba(255, 69, 38, .22) 1.4px, rgba(255, 69, 38, 0) 3px),
-    radial-gradient(circle at 22% 92%, rgba(255, 176, 120, .6) 0 .6px, rgba(255, 69, 38, .2) 1.2px, rgba(255, 69, 38, 0) 2.6px),
-    radial-gradient(circle at 93% 58%, rgba(255, 176, 120, .7) 0 .7px, rgba(255, 69, 38, .2) 1.4px, rgba(255, 69, 38, 0) 3px),
-    radial-gradient(circle at 5% 47%, rgba(255, 176, 120, .6) 0 .6px, rgba(255, 69, 38, .2) 1.2px, rgba(255, 69, 38, 0) 2.6px);
+    radial-gradient(circle at 12% 18%, rgba(170, 215, 255, .8) 0 .7px, rgba(74, 163, 255, .25) 1.4px, rgba(74, 163, 255, 0) 3px),
+    radial-gradient(circle at 31% 64%, rgba(170, 215, 255, .7) 0 .6px, rgba(74, 163, 255, .2) 1.3px, rgba(74, 163, 255, 0) 3px),
+    radial-gradient(circle at 47% 9%, rgba(170, 215, 255, .6) 0 .6px, rgba(74, 163, 255, .2) 1.2px, rgba(74, 163, 255, 0) 2.6px),
+    radial-gradient(circle at 58% 41%, rgba(170, 215, 255, .8) 0 .8px, rgba(74, 163, 255, .25) 1.5px, rgba(74, 163, 255, 0) 3.2px),
+    radial-gradient(circle at 71% 83%, rgba(170, 215, 255, .7) 0 .7px, rgba(74, 163, 255, .2) 1.4px, rgba(74, 163, 255, 0) 3px),
+    radial-gradient(circle at 86% 27%, rgba(170, 215, 255, .75) 0 .7px, rgba(74, 163, 255, .22) 1.4px, rgba(74, 163, 255, 0) 3px),
+    radial-gradient(circle at 22% 92%, rgba(170, 215, 255, .6) 0 .6px, rgba(74, 163, 255, .2) 1.2px, rgba(74, 163, 255, 0) 2.6px),
+    radial-gradient(circle at 93% 58%, rgba(170, 215, 255, .7) 0 .7px, rgba(74, 163, 255, .2) 1.4px, rgba(74, 163, 255, 0) 3px),
+    radial-gradient(circle at 5% 47%, rgba(170, 215, 255, .6) 0 .6px, rgba(74, 163, 255, .2) 1.2px, rgba(74, 163, 255, 0) 2.6px);
 }
 /* ближние искры: крупнее, быстрее, качаются с другим периодом */
 .hr-heat > i:last-child { opacity: .7; animation-duration: 5.2s; transition: opacity var(--t-slow) var(--ease); }
 .hr-heat > i:last-child::before {
   animation-duration: 11s;
   background-image:
-    radial-gradient(circle at 18% 55%, rgba(255, 196, 140, .95) 0 1.3px, rgba(255, 90, 40, .35) 2.4px, rgba(255, 69, 38, 0) 6px),
-    radial-gradient(circle at 64% 12%, rgba(255, 196, 140, .85) 0 1.1px, rgba(255, 90, 40, .3) 2.2px, rgba(255, 69, 38, 0) 5px),
-    radial-gradient(circle at 83% 72%, rgba(255, 196, 140, .95) 0 1.4px, rgba(255, 90, 40, .35) 2.6px, rgba(255, 69, 38, 0) 6.5px),
-    radial-gradient(circle at 38% 88%, rgba(255, 196, 140, .8) 0 1px, rgba(255, 90, 40, .3) 2px, rgba(255, 69, 38, 0) 5px),
-    radial-gradient(circle at 9% 30%, rgba(255, 196, 140, .85) 0 1.1px, rgba(255, 90, 40, .3) 2.2px, rgba(255, 69, 38, 0) 5px);
+    radial-gradient(circle at 18% 55%, rgba(200, 230, 255, .95) 0 1.3px, rgba(90, 170, 255, .35) 2.4px, rgba(74, 163, 255, 0) 6px),
+    radial-gradient(circle at 64% 12%, rgba(200, 230, 255, .85) 0 1.1px, rgba(90, 170, 255, .3) 2.2px, rgba(74, 163, 255, 0) 5px),
+    radial-gradient(circle at 83% 72%, rgba(200, 230, 255, .95) 0 1.4px, rgba(90, 170, 255, .35) 2.6px, rgba(74, 163, 255, 0) 6.5px),
+    radial-gradient(circle at 38% 88%, rgba(200, 230, 255, .8) 0 1px, rgba(90, 170, 255, .3) 2px, rgba(74, 163, 255, 0) 5px),
+    radial-gradient(circle at 9% 30%, rgba(200, 230, 255, .85) 0 1.1px, rgba(90, 170, 255, .3) 2.2px, rgba(74, 163, 255, 0) 5px);
 }
 .hr-heat[data-on] > i, .hr-heat[data-on] > i::before { animation-play-state: running; }
 @keyframes hr-rise { to { transform: translateY(-50%); } }
@@ -660,7 +660,7 @@ body {
 /* ---------- окно покупки ----------
    Та же плита, что под баннером: обсидиан, скол угла, трещина по верхней кромке.
    Лава одна: кнопка «Получить». */
-.ModalLayout-module__wrapper { background: rgba(8, 6, 5, .84); }
+.ModalLayout-module__wrapper { background: rgba(4, 8, 16, .84); }
 .ModalLayout-module__overflowWrapper::-webkit-scrollbar-track { background: var(--obs); }
 .ModalLayout-module__overflowWrapper::-webkit-scrollbar-thumb { background: var(--slab-2); }
 .ModalLayout-module__positionWrapper { align-items: center; padding: 24px; }
@@ -671,7 +671,7 @@ body {
 }
 .ModalLayout-module__modal::before {
   content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 100%; z-index: 1;
-  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(255, 69, 38, 0) 100%);
+  background: linear-gradient(90deg, var(--ember) 0, var(--ember) 38%, rgba(74, 163, 255, 0) 100%);
 }
 .ProductModal-module__item, .ProductModal-module__bp, .ProductModal-module__command, .ProductModal-module__dropdown { width: 440px; }
 .ModalLayout-module__modal > .boxHeader {
@@ -732,7 +732,7 @@ body {
 
 /* ---------- наведение: только там, где есть мышь (на телефоне красная цена не залипает) ---------- */
 @media (hover: hover) {
-  .Search-module__wrapper:hover { border-color: rgba(235, 229, 223, .22); }
+  .Search-module__wrapper:hover { border-color: rgba(232, 240, 251, .22); }
   .Search-module__wrapper:focus-within:hover { border-color: var(--stone-dim); }
   .Categories-module__category:hover { color: var(--stone); }
   .MonitoringServer-module__icon:hover { stroke: var(--ember); }
@@ -746,14 +746,14 @@ body {
   .Product-module__wrapper[data-hr-feat="portrait"]:hover .hr-heat::before,
   .Product-module__wrapper[data-hr-feat="portrait"]:hover .hr-heat > i:last-child { opacity: 1; }
   .ShopFooter-module__link:hover { color: var(--stone); }
-  .hr-tools select:hover, .hr-tools input[type="text"]:hover, .hr-tools__toggle:hover { border-color: rgba(235, 229, 223, .26); }
+  .hr-tools select:hover, .hr-tools input[type="text"]:hover, .hr-tools__toggle:hover { border-color: rgba(232, 240, 251, .26); }
   .hr-seg span:hover, .hr-check:hover span, .hr-tools__reset:hover { color: var(--stone); }
   .hr-promo__code:hover .hr-i, .hr-promo__go:hover .hr-i { color: var(--ember); }
   .hr-promo__go:hover { color: var(--ember); }
-  .hr-nores__reset:hover { background: #e52a12; }
+  .hr-nores__reset:hover { background: #2b7cff; }
   .CountSelector-module__changeCountBtn:hover { background: var(--slab-2); color: var(--stone); }
   .ModalLayout-module__modal .Button-module__btn.Button-module__gray:hover { border-color: var(--stone-mute); color: var(--stone); background: none; }
-  .ModalLayout-module__modal .Button-module__btn.Button-module__accent:hover { background: #e52a12; border-color: #e52a12; }
+  .ModalLayout-module__modal .Button-module__btn.Button-module__accent:hover { background: #2b7cff; border-color: #2b7cff; }
 }
 
 /* ---------- подвал и мелочи ---------- */
@@ -835,7 +835,7 @@ body {
      поэтому любой более узкий кадр что-то режет. Плита только чуть заходит на землю внизу кадра */
   .container.bannerContainer { --hr-head: 69px; padding: var(--hr-head) 0 0; background: var(--obs); }
   .Banner-module__img { height: auto; aspect-ratio: 16 / 9; object-position: center; }
-  .bannerContainer::after { top: var(--hr-head); background: linear-gradient(0deg, var(--obs) 0, rgba(13, 10, 9, .6) 8%, rgba(13, 10, 9, 0) 22%); }
+  .bannerContainer::after { top: var(--hr-head); background: linear-gradient(0deg, var(--obs) 0, rgba(7, 13, 25, .6) 8%, rgba(7, 13, 25, 0) 22%); }
   .hr-embers { top: var(--hr-head); height: auto; bottom: 0; }
   .hr-plate { margin-top: -24px; }
   .Index-module__wrapper { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; margin-top: 48px; }
@@ -1001,7 +1001,7 @@ body {
 .hr-c-at { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .hr-c-reason { color: var(--stone); }
 .hr-table--bans tr.is-over .hr-c-name b, .hr-table--bans tr.is-over .hr-c-reason, .hr-table--bans tr.is-over .hr-c-term { color: var(--stone-dim); }
-@media (hover: hover) { .hr-table tbody tr:hover td { background: rgba(235, 229, 223, .025); } }
+@media (hover: hover) { .hr-table tbody tr:hover td { background: rgba(232, 240, 251, .025); } }
 
 .hr-page__empty { margin: 8px 0 0; font: 500 15px/1.5 var(--ui); color: var(--stone-dim); }
 .hr-page__more {

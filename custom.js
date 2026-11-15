@@ -1,12 +1,13 @@
-/* HELL RUST — скрипт поверх стандартного шаблона GameStores.
+/* SKY RUST — скрипт поверх стандартного шаблона GameStores.
    Вставляется в «Внешний вид → Продвинутая конфигурация → JavaScript».
    Всё, что клиент может захотеть поменять, лежит в HR ниже. */
 (function () {
   var HR = {
     // картинки лежат в github.com/KERNO-Web/hellrust-demo-assets и отдаются через jsDelivr
-    logo: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@c8fdcb7/logo.webp',
-    banner: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@c8fdcb7/banner-wide.webp',
-    bannerMobile: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@c8fdcb7/banner-16x9.webp',
+    logo: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@58af89f/sky/logo.webp',
+    banner: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@58af89f/sky/banner-wide.webp',
+    bannerMobile: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@58af89f/sky/banner-16x9.webp',
+    placeholder: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@667ab95/sky/placeholder.jpg',
 
     connect: '194.147.90.228:35000',
 
@@ -121,7 +122,7 @@
     if (!img) return;
     var want = window.matchMedia('(max-width: 960px)').matches ? HR.bannerMobile : HR.banner;
     if (img.getAttribute('src') !== want) img.setAttribute('src', want);
-    img.alt = 'Hell Rust';
+    img.alt = 'Sky Rust';
     // показываем баннер только когда загрузился именно наш арт (иначе мелькает баннер GameStores)
     if (!img.hasAttribute('data-hr-ready') && !img._hrWait) {
       img._hrWait = true;
@@ -171,11 +172,11 @@
     // Теперь свечение рисуется один раз в маленькие спрайты (по оттенкам), а кадр — это только drawImage. Холст в 1×: искры мягкие, чёткость не нужна.
     var ctx = c.getContext('2d'), dpr = 1;
     var w = 0, h = 0, parts = [], on = true, last = 0;
-    var SPR = 32, sprites = [8, 15, 22, 30].map(function (hue) {
+    var SPR = 32, sprites = [196, 204, 212, 220].map(function (hue) {
       var s = document.createElement('canvas'); s.width = s.height = SPR;
       var g = s.getContext('2d'), r = SPR / 2, grd = g.createRadialGradient(r, r, 0, r, r, r);
-      grd.addColorStop(0, 'hsla(' + hue + ',100%,72%,1)');
-      grd.addColorStop(.22, 'hsla(' + hue + ',100%,58%,.9)');
+      grd.addColorStop(0, 'hsla(' + hue + ',100%,82%,1)');
+      grd.addColorStop(.22, 'hsla(' + hue + ',95%,68%,.9)');
       grd.addColorStop(.5, 'hsla(' + hue + ',100%,50%,.25)');
       grd.addColorStop(1, 'hsla(' + hue + ',100%,50%,0)');
       g.fillStyle = grd; g.fillRect(0, 0, SPR, SPR);
@@ -785,6 +786,8 @@
   // кадр картинки можно задать прямо в ссылке: ...webp#pos=30% 20% (это object-position)
   function crops() {
     document.querySelectorAll('.Product-module__img, .productModalImg').forEach(function (img) {
+      // старая заглушка с «HELL RUST» прописана в товарах админки: подменяем на новую, товары не трогаем
+      if (/\/privileges\/placeholder\.jpg/.test(img.getAttribute('src') || '')) img.setAttribute('src', HR.placeholder);
       var m = (img.getAttribute('src') || '').match(/#pos=([^&]+)/);
       var v = '';
       if (m) { try { v = decodeURIComponent(m[1]); } catch (e) { v = m[1]; } v = v.replace(/[^\d.% a-z-]/gi, ''); }
@@ -933,7 +936,7 @@
     var reasons = ['Читы: аимбот', 'Читы: волхак', 'Макросы на отдачу', 'Обход бана', 'Тим больше лимита', 'Оскорбления администрации',
       'Реклама другого сервера', 'Багоюз: текстуры', 'Читы: аимбот', 'Тим больше лимита', 'Помеха проверке на читы', 'Макросы на отдачу',
       'Оскорбления игроков', 'Читы: спидхак', 'Багоюз: стены', 'Обход бана'];
-    var lens = [0, 0, 30, 0, 7, 3, 7, 14, 0, 7, 0, 30, 1, 0, 14, 0], admins = ['Hellkeeper', 'Сатир', 'Hellkeeper', 'Лев'];
+    var lens = [0, 0, 30, 0, 7, 3, 7, 14, 0, 7, 0, 30, 1, 0, 14, 0], admins = ['Skykeeper', 'Сатир', 'Skykeeper', 'Лев'];
     var now = Date.now();
     return reasons.map(function (r, i) {
       var at = new Date(now - (i * 26 + rnd() * 20 + 3) * 3600e3), len = lens[i];
@@ -1096,7 +1099,7 @@
     if (wrap && !k) route.seen = true;
     if (!k || !wrap) {
       if (box) box.remove();
-      if (PG.title0 && / — Hell Rust$/.test(document.title)) document.title = PG.title0;
+      if (PG.title0 && / — Sky Rust$/.test(document.title)) document.title = PG.title0;
       return;
     }
     // открыли сайт сразу по ссылке /#stats: раздел ниже баннера, докручиваем к нему
@@ -1108,8 +1111,8 @@
       loadPage(k, box);
       renderPage(k, box);
     }
-    var t = HR.pages[k].title + ' — Hell Rust';
-    if (!/ — Hell Rust$/.test(document.title)) PG.title0 = document.title;
+    var t = HR.pages[k].title + ' — Sky Rust';
+    if (!/ — Sky Rust$/.test(document.title)) PG.title0 = document.title;
     if (document.title !== t) document.title = t;
     if (scroll) {
       // при загрузке шаблон сам прокручивает в начало, поэтому ждём его и едем без анимации
@@ -1123,7 +1126,7 @@
   // шаблон ставит свой заголовок вкладки браузера («Магазин»), на разделах возвращаем свой
   new MutationObserver(function () {
     var k = pageNow();
-    if (k && document.querySelector('.hr-page')) { var t = HR.pages[k].title + ' — Hell Rust'; if (document.title !== t) { if (!/ — Hell Rust$/.test(document.title)) PG.title0 = document.title; document.title = t; } }
+    if (k && document.querySelector('.hr-page')) { var t = HR.pages[k].title + ' — Sky Rust'; if (document.title !== t) { if (!/ — Sky Rust$/.test(document.title)) PG.title0 = document.title; document.title = t; } }
   }).observe(document.head, { childList: true, subtree: true, characterData: true });
   window.addEventListener('hashchange', function () { BOOT.hash = ''; route(true); });
   // роутер шаблона меняет адрес через history без событий: после каждой смены сверяем вкладку
