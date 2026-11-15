@@ -1222,3 +1222,7 @@ select, [class*="Select-module__"], [class*="Sort"], [class*="Counter-module__"]
 /* цвета привилегий задаёт клиент в описании (GOD жёлтый и т.п.) — цвет не трогаем,
    а плашку значения делаем тёмно-синей, чтобы жёлтый/зелёный читались на светлом */
 .hr-perk__val[style] { background: #10233f; }
+
+/* цена-кнопка на наведении: фон синий, текст тоже уходил в синий (ember) и пропадал — текст белеет */
+.Product-module__price { color: color-mix(in srgb, #fff calc(var(--hr-price) * 100%), var(--stone)); }
+.Product-module__oldPrice { color: color-mix(in srgb, rgba(255, 255, 255, .8) calc(var(--hr-price) * 100%), var(--stone-mute)); }
