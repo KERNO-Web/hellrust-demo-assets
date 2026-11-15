@@ -786,8 +786,8 @@
   // кадр картинки можно задать прямо в ссылке: ...webp#pos=30% 20% (это object-position)
   function crops() {
     document.querySelectorAll('.Product-module__img, .productModalImg').forEach(function (img) {
-      // старая заглушка с «HELL RUST» прописана в товарах админки: подменяем на новую, товары не трогаем
-      if (/\/privileges\/placeholder\.jpg/.test(img.getAttribute('src') || '')) img.setAttribute('src', HR.placeholder);
+      // старая заглушка «HELL RUST» и портреты демонов прописаны в товарах админки: подменяем на новую заглушку, товары не трогаем
+      if (/\/privileges\/(placeholder|demon|greshnik|palach|vladyka)\.jpg/.test(img.getAttribute('src') || '')) img.setAttribute('src', HR.placeholder);
       var m = (img.getAttribute('src') || '').match(/#pos=([^&]+)/);
       var v = '';
       if (m) { try { v = decodeURIComponent(m[1]); } catch (e) { v = m[1]; } v = v.replace(/[^\d.% a-z-]/gi, ''); }
