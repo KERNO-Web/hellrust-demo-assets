@@ -1201,7 +1201,7 @@ select, [class*="Select-module__"], [class*="Sort"], [class*="Counter-module__"]
 [class*="PlayerMenuMobile"] button, [class*="PlayerMenuMobile"] a[class*="Button"], [class*="Lang"] { border-radius: 14px; }
 
 /* карточки услуг: светлая заглушка, снизу растворение в белое */
-:root { --hr-ph: "https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@f8ee335/sky/placeholder-light.jpg"; }
+:root { --hr-ph: "https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@d1ae99e/sky/placeholder-light-v4.jpg"; }
 
 /* линия-трещина сверху плиты: прямая полоса поверх скруглённых углов — убрана */
 .hr-plate::before { display: none; }
