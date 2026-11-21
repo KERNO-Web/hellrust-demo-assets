@@ -4,9 +4,9 @@
 (function () {
   var HR = {
     // картинки лежат в github.com/KERNO-Web/hellrust-demo-assets и отдаются через jsDelivr
-    logo: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@58af89f/sky/logo.webp',
-    banner: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@454ed9d/sky/banner-wide-v3.webp',
-    bannerMobile: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@454ed9d/sky/banner-16x9-v3.webp',
+    logo: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@49d3971/sky/logo-v4.webp',
+    banner: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@49d3971/sky/banner-wide-v4.webp',
+    bannerMobile: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@49d3971/sky/banner-16x9-v4.webp',
     placeholder: 'https://cdn.jsdelivr.net/gh/KERNO-Web/hellrust-demo-assets@667ab95/sky/placeholder.jpg',
 
     connect: '194.147.90.228:28015',
